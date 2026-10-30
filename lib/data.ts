@@ -73,6 +73,105 @@ export async function getCuota(id: string) {
   return cuota;
 }
 
+// ---- Pagos realizados ----
+
+export async function getPagos(filtro: { anio: number; mes: number; categoriaId?: string }) {
+  const user = await getCurrentUser();
+  await io();
+  const desde = new Date(Date.UTC(filtro.anio, filtro.mes - 1, 1));
+  const hasta = new Date(Date.UTC(filtro.anio, filtro.mes, 1));
+
+  const [pagos, categorias] = await Promise.all([
+    db.pago.findMany({
+      where: {
+        usuarioId: user.id,
+        fecha: { gte: desde, lt: hasta },
+        ...(filtro.categoriaId ? { categoriaId: filtro.categoriaId } : {}),
+      },
+      orderBy: [{ fecha: "desc" }, { creadoEn: "desc" }],
+      include: {
+        categoria: { select: { nombre: true, icono: true } },
+        aporte: { select: { meta: { select: { nombre: true } } } },
+        abono: { select: { deuda: { select: { contraparte: true } } } },
+      },
+    }),
+    db.categoria.findMany({ where: { usuarioId: user.id }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, icono: true } }),
+  ]);
+
+  return {
+    categorias,
+    total: pagos.reduce((s, p) => s + Math.round(num(p.monto) * 100), 0) / 100,
+    pagos: pagos.map((p) => ({
+      id: p.id,
+      descripcion: p.descripcion,
+      fecha: p.fecha,
+      monto: num(p.monto),
+      metodo: p.metodo,
+      categoria: p.categoria,
+      tieneVoucher: Boolean(p.voucherKey),
+      vinculo: p.aporte ? `Meta: ${p.aporte.meta.nombre}` : p.abono ? `Deuda: ${p.abono.deuda.contraparte}` : null,
+    })),
+  };
+}
+
+export async function getPago(id: string) {
+  const user = await getCurrentUser();
+  await io();
+  const pago = await db.pago.findFirst({
+    where: { id, usuarioId: user.id },
+    include: {
+      categoria: { select: { id: true, nombre: true, icono: true } },
+      aporte: { select: { meta: { select: { id: true, nombre: true } } } },
+      abono: { select: { deuda: { select: { id: true, contraparte: true } } } },
+    },
+  });
+  if (!pago) notFound();
+  return {
+    id: pago.id,
+    descripcion: pago.descripcion,
+    fecha: pago.fecha,
+    monto: num(pago.monto),
+    metodo: pago.metodo,
+    categoria: pago.categoria,
+    voucherTipo: pago.voucherKey ? pago.voucherTipo : null,
+    meta: pago.aporte?.meta ?? null,
+    deuda: pago.abono?.deuda ?? null,
+  };
+}
+
+// Lo que el formulario de pago necesita para sus listas de opciones.
+export async function getOpcionesPago() {
+  const user = await getCurrentUser();
+  await io();
+  const [categorias, metas, deudas] = await Promise.all([
+    db.categoria.findMany({ where: { usuarioId: user.id }, orderBy: { nombre: "asc" }, select: { id: true, nombre: true, icono: true } }),
+    db.meta.findMany({
+      where: { usuarioId: user.id, estado: "ACTIVA" },
+      orderBy: [{ prioridad: "asc" }, { creadoEn: "asc" }],
+      select: { id: true, nombre: true, montoObjetivo: true, aportes: { select: { monto: true } } },
+    }),
+    db.deuda.findMany({
+      where: { usuarioId: user.id, tipo: "DEBO" },
+      orderBy: { fecha: "asc" },
+      select: { id: true, contraparte: true, monto: true, abonos: { select: { monto: true } } },
+    }),
+  ]);
+
+  return {
+    categorias,
+    metas: metas.map((m) => ({
+      id: m.id,
+      nombre: m.nombre,
+      falta: Math.max(0, num(m.montoObjetivo) - m.aportes.reduce((s, a) => s + num(a.monto), 0)),
+    })),
+    deudas: deudas.map((d) => ({
+      id: d.id,
+      nombre: d.contraparte,
+      falta: Math.max(0, num(d.monto) - d.abonos.reduce((s, a) => s + num(a.monto), 0)),
+    })),
+  };
+}
+
 export async function getResumen() {
   const user = await getCurrentUser();
   // Prisma y el cálculo por fecha leen valores que cambian por petición.
@@ -131,6 +230,7 @@ export async function getResumen() {
       fecha: p.fecha,
       monto: num(p.monto),
       categoria: p.categoria?.nombre ?? null,
+      icono: p.categoria?.icono ?? null,
     })),
   };
 }

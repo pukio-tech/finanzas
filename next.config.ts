@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     agentFeedback: true,
+    // Los vouchers (máx. 5 MB) se suben mediante una Server Action.
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
   },
   cacheComponents: true,
   partialPrefetching: true,

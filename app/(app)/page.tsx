@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ChevronRight, Receipt } from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { CategoriaIcono } from "@/components/categoria-icono";
 import { Card, ProgressBar, cx } from "@/components/ui";
 import { getResumen } from "@/lib/data";
 import { formatFecha, formatSoles } from "@/lib/format";
@@ -81,9 +82,9 @@ async function Resumen() {
             </div>
           )}
           {r.ultimosPagos.map((p) => (
-            <div key={p.id} className="flex items-center gap-3 px-4 py-3">
+            <Link key={p.id} href={`/pagos/${p.id}`} className="flex min-h-16 items-center gap-3 px-4 py-3 active:bg-surface-muted">
               <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-muted">
-                <Receipt className="size-5" aria-hidden />
+                <CategoriaIcono nombre={p.icono} className="size-5" />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate">{p.descripcion}</p>
@@ -93,7 +94,7 @@ async function Resumen() {
                 </p>
               </div>
               <span className="shrink-0 font-medium">{formatSoles(p.monto)}</span>
-            </div>
+            </Link>
           ))}
         </Card>
       </section>
