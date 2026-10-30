@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fechaDesdeISO, indiceMes } from "@/lib/fechas";
+import { moverAhorro } from "@/lib/saldo";
 import {
   fallo,
   fechaSchema,
@@ -21,7 +22,7 @@ async function ingresoPropio(ingresoId: string) {
   const usuarioId = await requireUserId();
   const ingreso = await db.ingreso.findFirst({ where: { id: ingresoId, usuarioId }, select: { id: true, montoMensual: true } });
   if (!ingreso) throw new Error("Ingreso no encontrado");
-  return ingreso;
+  return { ...ingreso, usuarioId };
 }
 
 function refrescar(ingresoId?: string) {
@@ -66,6 +67,7 @@ export async function guardarIngreso(ingresoId: string | null, _prev: FormState,
   redirect(`/ingresos/${ingreso.id}`);
 }
 
+// Lo ya cobrado sigue siendo tuyo: borrar el ingreso no toca tu dinero libre.
 export async function eliminarIngreso(ingresoId: string) {
   await ingresoPropio(ingresoId);
   await db.ingreso.delete({ where: { id: ingresoId } });
@@ -76,7 +78,7 @@ export async function eliminarIngreso(ingresoId: string) {
 const cobroSchema = z.object({ monto: montoSchema, fecha: fechaSchema, nota: textoOpcional });
 
 export async function registrarCobro(ingresoId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  await ingresoPropio(ingresoId);
+  const { usuarioId } = await ingresoPropio(ingresoId);
   const parsed = cobroSchema.safeParse({
     monto: formData.get("monto"),
     fecha: formData.get("fecha"),
@@ -84,16 +86,22 @@ export async function registrarCobro(ingresoId: string, _prev: FormState, formDa
   });
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
-  await db.cobro.create({
-    data: { ingresoId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
-  });
+  // Lo que cobras pasa a tu dinero libre.
+  await db.$transaction([
+    db.cobro.create({
+      data: { ingresoId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
+    }),
+    moverAhorro(usuarioId, parsed.data.monto),
+  ]);
   refrescar(ingresoId);
   redirect(`/ingresos/${ingresoId}`);
 }
 
 export async function eliminarCobro(ingresoId: string, cobroId: string) {
-  await ingresoPropio(ingresoId);
-  await db.cobro.deleteMany({ where: { id: cobroId, ingresoId } });
+  const { usuarioId } = await ingresoPropio(ingresoId);
+  const cobro = await db.cobro.findFirst({ where: { id: cobroId, ingresoId } });
+  if (!cobro) return;
+  await db.$transaction([db.cobro.delete({ where: { id: cobro.id } }), moverAhorro(usuarioId, -cobro.monto.toNumber())]);
   refrescar(ingresoId);
 }
 

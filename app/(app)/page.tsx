@@ -17,6 +17,7 @@ export default function InicioPage() {
 async function Resumen() {
   const [r, p] = await Promise.all([getResumen(), getProyeccion()]);
   const porCobrarTotal = Math.round((p.porCobrarVencido + p.ingresosFuturos) * 100) / 100;
+  const separado = Math.round(r.metas.reduce((s, m) => s + m.aportado, 0) * 100) / 100;
 
   return (
     <div className="flex flex-col gap-5 pb-6">
@@ -25,9 +26,17 @@ async function Resumen() {
         <p className="mt-1 text-[34px] font-semibold leading-tight tracking-tight">
           {formatSoles(r.ahorroActual)}
         </p>
-        <Link href="/proyeccion" className="text-sm text-muted">
-          Tienes ahorrado
-        </Link>
+        <p className="text-sm text-muted">
+          <Link href="/proyeccion">Dinero libre</Link>
+          {separado > 0 && (
+            <>
+              {" · "}
+              <Link href="/metas" className="text-accent">
+                {formatSoles(separado)} separado en metas
+              </Link>
+            </>
+          )}
+        </p>
       </header>
 
       <Link href="/ingresos" className="active:scale-[0.99]">

@@ -115,7 +115,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
 
       <ConfirmButton
         action={eliminarPago.bind(null, pago.id)}
-        message={`¿Eliminar el pago "${pago.descripcion}" de ${formatSoles(pago.monto)}? También se borra su voucher.`}
+        titulo="¿Eliminar el pago?"
+        message={`"${pago.descripcion}" de ${formatSoles(pago.monto)}. También se borra su voucher y el monto vuelve a tu dinero libre.`}
         className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium text-danger"
       >
         <Trash2 className="size-4" aria-hidden />

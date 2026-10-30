@@ -5,7 +5,8 @@
 
 import { indiceMes, sumarMeses, type MesAnio } from "./fechas";
 
-export type MetaProyeccion = { id: string; nombre: string; falta: number };
+// `separado` es lo que ya juntaste para la meta (informativo: ya no está en tu dinero libre).
+export type MetaProyeccion = { id: string; nombre: string; falta: number; separado?: number };
 
 export type ProyeccionInput = {
   ahorroActual: number;

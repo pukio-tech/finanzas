@@ -6,6 +6,7 @@ import { z } from "zod";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fechaDesdeISO } from "@/lib/fechas";
+import { moverAhorro } from "@/lib/saldo";
 import { borrarVoucher, subirVoucher, VOUCHER_MAX_BYTES, VOUCHER_TIPOS } from "@/lib/s3";
 import { fallo, fechaSchema, montoSchema, primerError, type FormState } from "@/lib/validacion";
 
@@ -69,7 +70,7 @@ export async function guardarPago(pagoId: string | null, _prev: FormState, formD
   const { monto, descripcion, fecha, metodo, categoriaId, vinculo } = parsed.data;
 
   const existente = pagoId
-    ? await db.pago.findFirst({ where: { id: pagoId, usuarioId }, select: { id: true, voucherKey: true } })
+    ? await db.pago.findFirst({ where: { id: pagoId, usuarioId }, select: { id: true, voucherKey: true, monto: true } })
     : null;
   if (pagoId && !existente) return fallo(formData, "Pago no encontrado");
 
@@ -106,7 +107,9 @@ export async function guardarPago(pagoId: string | null, _prev: FormState, formD
   try {
     if (existente) {
       // El vínculo se rehace en cada edición para que el aporte/abono copie el monto y la fecha nuevos.
+      // Tu dinero libre solo cambia por la diferencia de monto.
       await db.$transaction([
+        moverAhorro(usuarioId, existente.monto.toNumber() - monto),
         db.aporteMeta.deleteMany({ where: { pagoId: existente.id } }),
         db.abonoDeuda.deleteMany({ where: { pagoId: existente.id } }),
         db.pago.update({
@@ -116,10 +119,14 @@ export async function guardarPago(pagoId: string | null, _prev: FormState, formD
       ]);
       id = existente.id;
     } else {
-      const creado = await db.pago.create({
-        data: { usuarioId, monto, descripcion, fecha: fechaDate, metodo, categoriaId, ...voucherData, ...vinculoData },
-        select: { id: true },
-      });
+      // Todo pago sale de tu dinero libre (también si suma a una meta o abona una deuda).
+      const [creado] = await db.$transaction([
+        db.pago.create({
+          data: { usuarioId, monto, descripcion, fecha: fechaDate, metodo, categoriaId, ...voucherData, ...vinculoData },
+          select: { id: true },
+        }),
+        moverAhorro(usuarioId, -monto),
+      ]);
       id = creado.id;
     }
   } catch (error) {
@@ -139,10 +146,11 @@ export async function guardarPago(pagoId: string | null, _prev: FormState, formD
 
 export async function eliminarPago(pagoId: string) {
   const usuarioId = await requireUserId();
-  const pago = await db.pago.findFirst({ where: { id: pagoId, usuarioId }, select: { id: true, voucherKey: true } });
+  const pago = await db.pago.findFirst({ where: { id: pagoId, usuarioId }, select: { id: true, voucherKey: true, monto: true } });
   if (!pago) return;
 
-  await db.pago.delete({ where: { id: pago.id } });
+  // Borrar el pago devuelve su monto a tu dinero libre.
+  await db.$transaction([db.pago.delete({ where: { id: pago.id } }), moverAhorro(usuarioId, pago.monto.toNumber())]);
   if (pago.voucherKey) await borrarVoucher(pago.voucherKey).catch((error) => console.error(error));
 
   refrescar();

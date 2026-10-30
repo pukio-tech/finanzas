@@ -6,13 +6,14 @@ import { z } from "zod";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fechaDesdeISO } from "@/lib/fechas";
+import { moverAhorro } from "@/lib/saldo";
 import { fallo, fechaSchema, montoSchema, primerError, textoOpcional, type FormState } from "@/lib/validacion";
 
 async function deudaPropia(deudaId: string) {
   const usuarioId = await requireUserId();
-  const deuda = await db.deuda.findFirst({ where: { id: deudaId, usuarioId }, select: { id: true } });
+  const deuda = await db.deuda.findFirst({ where: { id: deudaId, usuarioId }, select: { id: true, tipo: true } });
   if (!deuda) throw new Error("Deuda no encontrada");
-  return deuda;
+  return { ...deuda, usuarioId };
 }
 
 function refrescar(deudaId?: string) {
@@ -37,7 +38,7 @@ const deudaSchema = z
 
 export async function guardarDeuda(deudaId: string | null, _prev: FormState, formData: FormData): Promise<FormState> {
   const usuarioId = await requireUserId();
-  if (deudaId) await deudaPropia(deudaId);
+  const actual = deudaId ? await deudaPropia(deudaId) : null;
 
   const parsed = deudaSchema.safeParse({
     tipo: formData.get("tipo"),
@@ -50,10 +51,10 @@ export async function guardarDeuda(deudaId: string | null, _prev: FormState, for
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
   const { tipo, contraparte, descripcion, monto, fecha, fechaLimite } = parsed.data;
-  if (deudaId && tipo === "ME_DEBEN") {
-    // Un abono que viene de un pago tuyo solo tiene sentido en algo que tú debes.
-    const conPagos = await db.abonoDeuda.count({ where: { deudaId, pagoId: { not: null } } });
-    if (conPagos > 0) return fallo(formData, "Esta deuda tiene pagos tuyos vinculados; no puede pasar a “me deben”.");
+  if (deudaId && actual && actual.tipo !== tipo) {
+    // Los abonos ya movieron tu dinero libre en un sentido; cambiar el tipo lo descuadraría.
+    const abonos = await db.abonoDeuda.count({ where: { deudaId } });
+    if (abonos > 0) return fallo(formData, "Esta deuda ya tiene abonos; no puedes cambiar quién le debe a quién.");
   }
 
   const data = {
@@ -74,7 +75,8 @@ export async function guardarDeuda(deudaId: string | null, _prev: FormState, for
 
 export async function eliminarDeuda(deudaId: string) {
   await deudaPropia(deudaId);
-  // Los pagos vinculados se conservan; solo se borran los abonos.
+  // Los pagos vinculados se conservan; solo se borran los abonos. El dinero libre no cambia:
+  // lo que ya pagaste o te devolvieron sigue igual.
   await db.deuda.delete({ where: { id: deudaId } });
   refrescar();
   redirect("/deudas");
@@ -83,7 +85,7 @@ export async function eliminarDeuda(deudaId: string) {
 const abonoSchema = z.object({ monto: montoSchema, fecha: fechaSchema, nota: textoOpcional });
 
 export async function agregarAbono(deudaId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  await deudaPropia(deudaId);
+  const { usuarioId, tipo } = await deudaPropia(deudaId);
   const parsed = abonoSchema.safeParse({
     monto: formData.get("monto"),
     fecha: formData.get("fecha"),
@@ -91,16 +93,26 @@ export async function agregarAbono(deudaId: string, _prev: FormState, formData: 
   });
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
-  await db.abonoDeuda.create({
-    data: { deudaId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
-  });
+  // Si pagas lo que debes, sale de tu dinero libre; si te devuelven, entra.
+  await db.$transaction([
+    db.abonoDeuda.create({
+      data: { deudaId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
+    }),
+    moverAhorro(usuarioId, tipo === "DEBO" ? -parsed.data.monto : parsed.data.monto),
+  ]);
   refrescar(deudaId);
   return { ok: true };
 }
 
 export async function eliminarAbono(deudaId: string, abonoId: string) {
-  await deudaPropia(deudaId);
+  const { usuarioId, tipo } = await deudaPropia(deudaId);
   // Los abonos que vienen de un pago se manejan desde el pago.
-  await db.abonoDeuda.deleteMany({ where: { id: abonoId, deudaId, pagoId: null } });
+  const abono = await db.abonoDeuda.findFirst({ where: { id: abonoId, deudaId, pagoId: null } });
+  if (!abono) return;
+  const monto = abono.monto.toNumber();
+  await db.$transaction([
+    db.abonoDeuda.delete({ where: { id: abono.id } }),
+    moverAhorro(usuarioId, tipo === "DEBO" ? monto : -monto),
+  ]);
   refrescar(deudaId);
 }

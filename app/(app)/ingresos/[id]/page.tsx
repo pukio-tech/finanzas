@@ -79,7 +79,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               <span className="shrink-0 font-medium">{formatSoles(c.monto)}</span>
               <ConfirmButton
                 action={eliminarCobro.bind(null, ingreso.id, c.id)}
-                message={`¿Eliminar el cobro de ${formatSoles(c.monto)}?`}
+                titulo="¿Eliminar el cobro?"
+                message={`Se quitan ${formatSoles(c.monto)} de tu dinero libre y vuelven a quedar por cobrar.`}
                 label="Eliminar cobro"
                 className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-danger"
               >
@@ -108,7 +109,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
 
       <ConfirmButton
         action={eliminarIngreso.bind(null, ingreso.id)}
-        message={`¿Eliminar "${ingreso.nombre}" con todos sus cobros? No se puede deshacer.`}
+        titulo="¿Eliminar el ingreso?"
+        message={`Se borra "${ingreso.nombre}" con todos sus cobros. Tu dinero libre no cambia. No se puede deshacer.`}
         className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium text-danger"
       >
         <Trash2 className="size-4" aria-hidden />

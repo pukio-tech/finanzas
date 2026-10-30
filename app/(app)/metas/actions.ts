@@ -7,13 +7,15 @@ import { ICONOS_META } from "@/components/categoria-icono";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { fechaDesdeISO } from "@/lib/fechas";
+import { formatSoles } from "@/lib/format";
+import { ahorroLibre, moverAhorro } from "@/lib/saldo";
 import { fallo, fechaSchema, montoSchema, primerError, textoOpcional, type FormState } from "@/lib/validacion";
 
 async function metaPropia(metaId: string) {
   const usuarioId = await requireUserId();
   const meta = await db.meta.findFirst({ where: { id: metaId, usuarioId }, select: { id: true } });
   if (!meta) throw new Error("Meta no encontrada");
-  return meta;
+  return { ...meta, usuarioId };
 }
 
 function refrescar(metaId?: string) {
@@ -63,9 +65,14 @@ export async function cambiarEstadoMeta(metaId: string, estado: "ACTIVA" | "COMP
 }
 
 export async function eliminarMeta(metaId: string) {
-  await metaPropia(metaId);
-  // Los pagos vinculados se conservan; solo pierden el vínculo (se borran sus aportes).
-  await db.meta.delete({ where: { id: metaId } });
+  const { usuarioId } = await metaPropia(metaId);
+  // Lo que separaste a mano vuelve a tu dinero libre. Los pagos vinculados se conservan
+  // (ya se descontaron como pagos); solo pierden el vínculo.
+  const separado = await db.aporteMeta.aggregate({ where: { metaId, pagoId: null }, _sum: { monto: true } });
+  await db.$transaction([
+    db.meta.delete({ where: { id: metaId } }),
+    moverAhorro(usuarioId, separado._sum.monto?.toNumber() ?? 0),
+  ]);
   refrescar();
   redirect("/metas");
 }
@@ -73,7 +80,7 @@ export async function eliminarMeta(metaId: string) {
 const aporteSchema = z.object({ monto: montoSchema, fecha: fechaSchema, nota: textoOpcional });
 
 export async function agregarAporte(metaId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  await metaPropia(metaId);
+  const { usuarioId } = await metaPropia(metaId);
   const parsed = aporteSchema.safeParse({
     monto: formData.get("monto"),
     fecha: formData.get("fecha"),
@@ -81,16 +88,35 @@ export async function agregarAporte(metaId: string, _prev: FormState, formData: 
   });
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
-  await db.aporteMeta.create({
-    data: { metaId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
-  });
+  // El dinero sale de tu ahorro libre, así que no puede ser más de lo que tienes.
+  const libre = await ahorroLibre(usuarioId);
+  if (parsed.data.monto > libre) {
+    return fallo(
+      formData,
+      libre > 0
+        ? `Solo tienes ${formatSoles(libre)} libres. Si tienes más, actualízalo en Proyección.`
+        : "No tienes dinero libre. Si tienes ahorros, anótalos en Proyección.",
+    );
+  }
+
+  await db.$transaction([
+    db.aporteMeta.create({
+      data: { metaId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
+    }),
+    moverAhorro(usuarioId, -parsed.data.monto),
+  ]);
   refrescar(metaId);
   return { ok: true };
 }
 
 export async function eliminarAporte(metaId: string, aporteId: string) {
-  await metaPropia(metaId);
+  const { usuarioId } = await metaPropia(metaId);
   // Los aportes que vienen de un pago se manejan desde el pago.
-  await db.aporteMeta.deleteMany({ where: { id: aporteId, metaId, pagoId: null } });
+  const aporte = await db.aporteMeta.findFirst({ where: { id: aporteId, metaId, pagoId: null } });
+  if (!aporte) return;
+  await db.$transaction([
+    db.aporteMeta.delete({ where: { id: aporte.id } }),
+    moverAhorro(usuarioId, aporte.monto.toNumber()),
+  ]);
   refrescar(metaId);
 }

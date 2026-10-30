@@ -84,6 +84,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         <ConfirmButton
           action={cambiarEstadoMeta.bind(null, meta.id, "COMPLETADA")}
           message={`¿Marcar "${meta.nombre}" como cumplida?`}
+          titulo="¿Ya lo compraste?"
+          confirmar="Sí, cumplida"
+          tono="accent"
           className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-success-soft font-medium text-success"
         >
           <CircleCheck className="size-5" aria-hidden />
@@ -95,7 +98,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         <MovimientoForm
           action={agregarAporte.bind(null, meta.id)}
           titulo="Separar dinero para esta meta"
-          boton="Agregar aporte"
+          boton="Separar dinero"
+          ayuda={`Sale de tu dinero libre: tienes ${formatSoles(meta.libre)}.`}
           hoy={hoyISO()}
           montoSugerido={porMes ? Math.ceil(porMes * 100) / 100 : undefined}
         />
@@ -128,7 +132,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               ) : (
                 <ConfirmButton
                   action={eliminarAporte.bind(null, meta.id, a.id)}
-                  message={`¿Eliminar el aporte de ${formatSoles(a.monto)}?`}
+                  titulo="¿Quitar el aporte?"
+                  message={`${formatSoles(a.monto)} vuelven a tu dinero libre.`}
                   label="Eliminar aporte"
                   className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-danger"
                 >
@@ -146,6 +151,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
             <ConfirmButton
               action={cambiarEstadoMeta.bind(null, meta.id, "COMPLETADA")}
               message={`¿Marcar "${meta.nombre}" como cumplida?`}
+              titulo="Marcar como cumplida"
+              confirmar="Sí, cumplida"
+              tono="accent"
               className={`${botonSecundario} text-success`}
             >
               <CircleCheck className="size-4" aria-hidden />
@@ -153,7 +161,10 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
             </ConfirmButton>
             <ConfirmButton
               action={cambiarEstadoMeta.bind(null, meta.id, "CANCELADA")}
-              message={`¿Cancelar "${meta.nombre}"? Sus aportes se conservan.`}
+              message={`"${meta.nombre}" pasará a canceladas. Lo que separaste se queda en la meta; si quieres recuperarlo, elimina la meta.`}
+              titulo="¿Cancelar la meta?"
+              confirmar="Sí, cancelar"
+              tono="accent"
               className={`${botonSecundario} text-muted`}
             >
               <X className="size-4" aria-hidden />
@@ -163,7 +174,10 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         ) : (
           <ConfirmButton
             action={cambiarEstadoMeta.bind(null, meta.id, "ACTIVA")}
-            message={`¿Volver a activar "${meta.nombre}"?`}
+            message={`"${meta.nombre}" volverá a tus metas activas.`}
+            titulo="¿Reactivar la meta?"
+            confirmar="Reactivar"
+            tono="accent"
             className={`${botonSecundario} col-span-2`}
           >
             <RotateCcw className="size-4" aria-hidden />
@@ -174,7 +188,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
 
       <ConfirmButton
         action={eliminarMeta.bind(null, meta.id)}
-        message={`¿Eliminar "${meta.nombre}" y sus aportes? Los pagos vinculados se conservan.`}
+        message={`Se borra "${meta.nombre}" y sus aportes.${meta.aportes.some((a) => !a.pago) ? " Lo que separaste a mano vuelve a tu dinero libre." : ""} Los pagos vinculados se conservan.`}
+        titulo="¿Eliminar la meta?"
         className={`${botonSecundario} text-danger`}
       >
         <Trash2 className="size-4" aria-hidden />

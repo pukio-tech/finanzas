@@ -11,19 +11,24 @@ export function MovimientoForm({
   boton,
   hoy,
   montoSugerido,
+  ayuda,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   titulo: string;
   boton: string;
   hoy: string;
   montoSugerido?: number;
+  ayuda?: string;
 }) {
   const { state, pending, formRef, onSubmit } = useFormAction(action);
 
   return (
     <Card>
       <form ref={formRef} onSubmit={onSubmit} className="flex flex-col gap-3">
-        <p className="font-medium">{titulo}</p>
+        <div>
+          <p className="font-medium">{titulo}</p>
+          {ayuda && <p className="text-xs text-muted">{ayuda}</p>}
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-muted">Monto</span>

@@ -92,7 +92,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
 
       {/* Desglose al estilo de la hoja de Excel */}
       <Card flush className="divide-y divide-border text-sm">
-        <Fila label="Ahorro actual" valor={p.ahorroActual} />
+        <Fila label="Dinero libre" detalle="Sin contar lo que ya separaste para metas" detalleTono="muted" valor={p.ahorroActual} />
         {p.porCobrarVencido > 0 && (
           <Fila label="Te deben de tu sueldo" detalle="Meses pasados sin cobrar" detalleTono="muted" valor={p.porCobrarVencido} signo="+" href="/ingresos" />
         )}
@@ -125,8 +125,8 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
         {p.metas.map((m) => (
           <Fila
             key={m.id}
-            label={m.nombre}
-            detalle={m.cubiertaEn ? `Cubierta en ${nombreMes(m.cubiertaEn.mes).toLowerCase()} ${m.cubiertaEn.anio}` : "No se cubre en este plazo"}
+            label={`${m.nombre} (lo que falta)`}
+            detalle={`${m.separado ? `Ya tienes ${formatSoles(m.separado)} · ` : ""}${m.cubiertaEn ? `cubierta en ${nombreMes(m.cubiertaEn.mes).toLowerCase()} ${m.cubiertaEn.anio}` : "no se cubre en este plazo"}`}
             detalleTono={m.cubiertaEn ? "success" : "danger"}
             valor={m.falta}
             signo="−"

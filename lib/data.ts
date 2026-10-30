@@ -99,19 +99,23 @@ export async function getMetas() {
 export async function getMeta(id: string) {
   const user = await getCurrentUser();
   await io();
-  const meta = await db.meta.findFirst({
-    where: { id, usuarioId: user.id },
-    include: {
-      aportes: {
-        orderBy: [{ fecha: "desc" }, { id: "desc" }],
-        include: { pago: { select: { id: true, descripcion: true } } },
+  const [meta, plan] = await Promise.all([
+    db.meta.findFirst({
+      where: { id, usuarioId: user.id },
+      include: {
+        aportes: {
+          orderBy: [{ fecha: "desc" }, { id: "desc" }],
+          include: { pago: { select: { id: true, descripcion: true } } },
+        },
       },
-    },
-  });
+    }),
+    db.planAhorro.findUnique({ where: { usuarioId: user.id }, select: { ahorroActual: true } }),
+  ]);
   if (!meta) notFound();
   const objetivo = num(meta.montoObjetivo);
   const aportado = sumar(meta.aportes);
   return {
+    libre: num(plan?.ahorroActual),
     id: meta.id,
     nombre: meta.nombre,
     icono: meta.icono,
@@ -247,7 +251,12 @@ export async function getProyeccion(hasta?: MesAnio) {
     meDeben: pendiente("ME_DEBEN"),
     debo: pendiente("DEBO"),
     metas: metas
-      .map((m) => ({ id: m.id, nombre: m.nombre, falta: Math.max(0, Math.round((num(m.montoObjetivo) - sumar(m.aportes)) * 100) / 100) }))
+      .map((m) => ({
+        id: m.id,
+        nombre: m.nombre,
+        separado: sumar(m.aportes),
+        falta: Math.max(0, Math.round((num(m.montoObjetivo) - sumar(m.aportes)) * 100) / 100),
+      }))
       .filter((m) => m.falta > 0),
     desde,
     hasta: limite,

@@ -83,6 +83,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
           action={agregarAbono.bind(null, deuda.id)}
           titulo={debo ? "Registrar lo que pagaste" : "Registrar lo que te devolvió"}
           boton="Agregar abono"
+          ayuda={debo ? "Se descuenta de tu dinero libre." : "Se suma a tu dinero libre."}
           hoy={hoy}
           montoSugerido={deuda.pendiente}
         />
@@ -120,7 +121,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               ) : (
                 <ConfirmButton
                   action={eliminarAbono.bind(null, deuda.id, a.id)}
-                  message={`¿Eliminar el abono de ${formatSoles(a.monto)}?`}
+                  titulo="¿Eliminar el abono?"
+                  message={`${formatSoles(a.monto)} ${debo ? "vuelven a" : "salen de"} tu dinero libre.`}
                   label="Eliminar abono"
                   className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-danger"
                 >
@@ -134,7 +136,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
 
       <ConfirmButton
         action={eliminarDeuda.bind(null, deuda.id)}
-        message={`¿Eliminar la deuda con ${deuda.contraparte} y sus abonos? Los pagos vinculados se conservan.`}
+        titulo="¿Eliminar la deuda?"
+        message={`Se borra la deuda con ${deuda.contraparte} y sus abonos. Tu dinero libre no cambia y los pagos vinculados se conservan.`}
         className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium text-danger"
       >
         <Trash2 className="size-4" aria-hidden />
