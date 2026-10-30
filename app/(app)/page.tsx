@@ -61,12 +61,12 @@ async function Resumen() {
           <SectionTitle title="Cuotas" href="/cuotas" />
           <Card flush className="divide-y divide-border">
             {r.cuotas.map((c) => (
-              <div key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
+              <Link key={c.id} href={`/cuotas/${c.id}`} className="flex min-h-12 items-center justify-between gap-3 px-4 py-3 active:bg-surface-muted">
                 <span className="truncate">{c.concepto}</span>
                 <span className={cx("shrink-0 text-sm font-medium", c.faltanteTotal > 0 ? "text-warning" : "text-success")}>
                   {c.faltanteTotal > 0 ? `Faltan ${formatSoles(c.faltanteTotal)}` : "Al día"}
                 </span>
-              </div>
+              </Link>
             ))}
           </Card>
         </section>

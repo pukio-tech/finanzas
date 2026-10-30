@@ -30,9 +30,17 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href);
 }
 
-// Menú lateral para pantallas medianas y grandes.
+// usePathname() se lee dentro de <Suspense> (ver layout); el fallback se dibuja sin item activo.
 export function SideNav() {
-  const pathname = usePathname();
+  return <SideNavView pathname={usePathname()} />;
+}
+
+export function SideNavFallback() {
+  return <SideNavView pathname="" />;
+}
+
+// Menú lateral para pantallas medianas y grandes.
+function SideNavView({ pathname }: { pathname: string }) {
   return (
     <nav className="flex flex-col gap-1" aria-label="Principal">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
@@ -61,9 +69,16 @@ const BOTTOM_ITEMS: NavItem[] = [
   { href: "/mas", label: "Más", icon: Menu },
 ];
 
-// Barra inferior para celular, con el botón central de registrar pago.
 export function BottomNav() {
-  const pathname = usePathname();
+  return <BottomNavView pathname={usePathname()} />;
+}
+
+export function BottomNavFallback() {
+  return <BottomNavView pathname="" />;
+}
+
+// Barra inferior para celular, con el botón central de registrar pago.
+function BottomNavView({ pathname }: { pathname: string }) {
   const items = BOTTOM_ITEMS.map(({ href, label, icon: Icon }) => {
     const active =
       href === "/mas"

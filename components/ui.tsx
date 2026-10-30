@@ -57,6 +57,33 @@ export function Field({ label, hint, id, name, className, ...props }: FieldProps
   );
 }
 
+// Monto en soles con teclado decimal en el celular.
+export function MoneyInput({
+  className,
+  size = "md",
+  ...props
+}: Omit<ComponentProps<"input">, "size"> & { size?: "md" | "lg" }) {
+  return (
+    <div
+      className={cx(
+        "flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25",
+        size === "lg" ? "min-h-16" : "min-h-12",
+        className,
+      )}
+    >
+      <span className={cx("text-muted", size === "lg" && "text-2xl")}>S/</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        autoComplete="off"
+        placeholder="0.00"
+        className={cx("w-full min-w-0 bg-transparent outline-none", size === "lg" && "text-3xl font-semibold")}
+        {...props}
+      />
+    </div>
+  );
+}
+
 export function Alert({ children, tone = "danger" }: { children: ReactNode; tone?: "danger" | "success" }) {
   return (
     <p

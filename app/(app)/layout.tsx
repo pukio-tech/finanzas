@@ -4,7 +4,7 @@ import Link from "next/link";
 import { LogOut, Plus, Wallet } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { cerrarSesion } from "../(auth)/actions";
-import { BottomNav, SideNav } from "./nav";
+import { BottomNav, BottomNavFallback, SideNav, SideNavFallback } from "./nav";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -23,7 +23,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <Plus className="size-5" aria-hidden />
           Registrar pago
         </Link>
-        <SideNav />
+        <Suspense fallback={<SideNavFallback />}>
+          <SideNav />
+        </Suspense>
         <div className="mt-auto border-t border-border pt-4">
           <Suspense fallback={<div className="h-10" />}>
             <UserMenu />
@@ -37,7 +39,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </main>
       </div>
 
-      <BottomNav />
+      <Suspense fallback={<BottomNavFallback />}>
+        <BottomNav />
+      </Suspense>
     </div>
   );
 }
