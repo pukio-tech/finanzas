@@ -19,10 +19,18 @@ const EXTENSION: Record<string, string> = {
 
 let client: S3Client | null = null;
 
+// Usa las variables estándar AWS_* (sirven para AWS o un servicio compatible como Neon).
+// AWS_ENDPOINT_URL_S3 solo hace falta si no es AWS.
 function config() {
-  const { S3_REGION, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY } = process.env;
-  if (!S3_REGION || !S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) return null;
-  return { region: S3_REGION, bucket: S3_BUCKET, accessKeyId: S3_ACCESS_KEY_ID, secretAccessKey: S3_SECRET_ACCESS_KEY };
+  const { AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_ENDPOINT_URL_S3, S3_BUCKET } = process.env;
+  if (!AWS_REGION || !S3_BUCKET || !AWS_ACCESS_KEY_ID || !AWS_SECRET_ACCESS_KEY) return null;
+  return {
+    region: AWS_REGION,
+    endpoint: AWS_ENDPOINT_URL_S3 || undefined,
+    bucket: S3_BUCKET,
+    accessKeyId: AWS_ACCESS_KEY_ID,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+  };
 }
 
 export function s3Configurado() {
@@ -31,9 +39,12 @@ export function s3Configurado() {
 
 function s3() {
   const c = config();
-  if (!c) throw new Error("S3 no está configurado. Completa las variables S3_* en el archivo .env.");
+  if (!c) throw new Error("S3 no está configurado. Completa las variables AWS_* y S3_BUCKET en el archivo .env.");
   client ??= new S3Client({
     region: c.region,
+    endpoint: c.endpoint,
+    // Los servicios compatibles suelen requerir rutas tipo endpoint/bucket/clave.
+    forcePathStyle: Boolean(c.endpoint),
     credentials: { accessKeyId: c.accessKeyId, secretAccessKey: c.secretAccessKey },
   });
   return { client, bucket: c.bucket };

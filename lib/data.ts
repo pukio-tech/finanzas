@@ -73,6 +73,135 @@ export async function getCuota(id: string) {
   return cuota;
 }
 
+// Suma en céntimos para no arrastrar errores de coma flotante.
+const sumar = (montos: { monto: { toNumber(): number } }[]) =>
+  montos.reduce((s, m) => s + Math.round(num(m.monto) * 100), 0) / 100;
+
+// ---- Metas ----
+
+export async function getMetas() {
+  const user = await getCurrentUser();
+  await io();
+  const metas = await db.meta.findMany({
+    where: { usuarioId: user.id },
+    orderBy: [{ prioridad: "asc" }, { creadoEn: "asc" }],
+    include: { aportes: { select: { monto: true } } },
+  });
+  return metas.map((m) => {
+    const objetivo = num(m.montoObjetivo);
+    const aportado = sumar(m.aportes);
+    return {
+      id: m.id,
+      nombre: m.nombre,
+      icono: m.icono,
+      prioridad: m.prioridad,
+      estado: m.estado,
+      fechaObjetivo: m.fechaObjetivo,
+      objetivo,
+      aportado,
+      falta: Math.max(0, Math.round((objetivo - aportado) * 100) / 100),
+    };
+  });
+}
+
+export async function getMeta(id: string) {
+  const user = await getCurrentUser();
+  await io();
+  const meta = await db.meta.findFirst({
+    where: { id, usuarioId: user.id },
+    include: {
+      aportes: {
+        orderBy: [{ fecha: "desc" }, { id: "desc" }],
+        include: { pago: { select: { id: true, descripcion: true } } },
+      },
+    },
+  });
+  if (!meta) notFound();
+  const objetivo = num(meta.montoObjetivo);
+  const aportado = sumar(meta.aportes);
+  return {
+    id: meta.id,
+    nombre: meta.nombre,
+    icono: meta.icono,
+    prioridad: meta.prioridad,
+    estado: meta.estado,
+    fechaObjetivo: meta.fechaObjetivo,
+    notas: meta.notas,
+    objetivo,
+    aportado,
+    falta: Math.max(0, Math.round((objetivo - aportado) * 100) / 100),
+    aportes: meta.aportes.map((a) => ({
+      id: a.id,
+      fecha: a.fecha,
+      monto: num(a.monto),
+      nota: a.nota,
+      pago: a.pago,
+    })),
+  };
+}
+
+// ---- Deudas ----
+
+export async function getDeudas() {
+  const user = await getCurrentUser();
+  await io();
+  const deudas = await db.deuda.findMany({
+    where: { usuarioId: user.id },
+    orderBy: [{ fechaLimite: { sort: "asc", nulls: "last" } }, { fecha: "asc" }],
+    include: { abonos: { select: { monto: true } } },
+  });
+  return deudas.map((d) => {
+    const monto = num(d.monto);
+    const abonado = sumar(d.abonos);
+    return {
+      id: d.id,
+      tipo: d.tipo,
+      contraparte: d.contraparte,
+      descripcion: d.descripcion,
+      fecha: d.fecha,
+      fechaLimite: d.fechaLimite,
+      monto,
+      abonado,
+      pendiente: Math.max(0, Math.round((monto - abonado) * 100) / 100),
+    };
+  });
+}
+
+export async function getDeuda(id: string) {
+  const user = await getCurrentUser();
+  await io();
+  const deuda = await db.deuda.findFirst({
+    where: { id, usuarioId: user.id },
+    include: {
+      abonos: {
+        orderBy: [{ fecha: "desc" }, { id: "desc" }],
+        include: { pago: { select: { id: true, descripcion: true } } },
+      },
+    },
+  });
+  if (!deuda) notFound();
+  const monto = num(deuda.monto);
+  const abonado = sumar(deuda.abonos);
+  return {
+    id: deuda.id,
+    tipo: deuda.tipo,
+    contraparte: deuda.contraparte,
+    descripcion: deuda.descripcion,
+    fecha: deuda.fecha,
+    fechaLimite: deuda.fechaLimite,
+    monto,
+    abonado,
+    pendiente: Math.max(0, Math.round((monto - abonado) * 100) / 100),
+    abonos: deuda.abonos.map((a) => ({
+      id: a.id,
+      fecha: a.fecha,
+      monto: num(a.monto),
+      nota: a.nota,
+      pago: a.pago,
+    })),
+  };
+}
+
 // ---- Pagos realizados ----
 
 export async function getPagos(filtro: { anio: number; mes: number; categoriaId?: string }) {

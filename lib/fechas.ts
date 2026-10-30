@@ -30,3 +30,9 @@ export function sumarMeses({ anio, mes }: MesAnio, n: number): MesAnio {
 export function indiceMes({ anio, mes }: MesAnio) {
   return anio * 12 + mes;
 }
+
+// Meses que quedan hasta una fecha, contando el mes actual (mínimo 1).
+export function mesesHasta(fecha: Date, hoy: MesAnio = mesActual()) {
+  const destino = { anio: fecha.getUTCFullYear(), mes: fecha.getUTCMonth() + 1 };
+  return Math.max(1, indiceMes(destino) - indiceMes(hoy) + 1);
+}
