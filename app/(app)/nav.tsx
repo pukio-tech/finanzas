@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Banknote,
   ChartLine,
   HandCoins,
   House,
@@ -10,7 +11,6 @@ import {
   Plus,
   Receipt,
   Target,
-  Users,
   type LucideIcon,
 } from "lucide-react";
 import { cx } from "@/components/ui";
@@ -19,7 +19,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
-  { href: "/cuotas", label: "Cuotas", icon: Users },
+  { href: "/ingresos", label: "Ingresos", icon: Banknote },
   { href: "/pagos", label: "Pagos", icon: Receipt },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/deudas", label: "Deudas", icon: HandCoins },
@@ -64,7 +64,7 @@ function SideNavView({ pathname }: { pathname: string }) {
 
 const BOTTOM_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
-  { href: "/cuotas", label: "Cuotas", icon: Users },
+  { href: "/ingresos", label: "Ingresos", icon: Banknote },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/mas", label: "Más", icon: Menu },
 ];

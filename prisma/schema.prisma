@@ -17,81 +17,68 @@ model Usuario {
   creadoEn     DateTime @default(now())
 
   plan       PlanAhorro?
-  cuotas     Cuota[]
+  ingresos   Ingreso[]
   metas      Meta[]
   deudas     Deuda[]
   categorias Categoria[]
   pagos      Pago[]
 }
 
-// Ahorro actual y cuánto ahorra al mes; alimenta la proyección.
+// Ahorro actual y gastos fijos del mes; junto con los ingresos alimentan la proyección.
 model PlanAhorro {
-  id             String   @id @default(cuid())
-  usuarioId      String   @unique
-  ahorroActual   Decimal  @default(0) @db.Decimal(12, 2)
-  ahorroMensual  Decimal  @default(0) @db.Decimal(12, 2)
-  actualizadoEn  DateTime @updatedAt
+  id            String   @id @default(cuid())
+  usuarioId     String   @unique
+  ahorroActual  Decimal  @default(0) @db.Decimal(12, 2)
+  // Lo que gastas cada mes de tus ingresos (lo que no ahorras).
+  gastoMensual  Decimal  @default(0) @db.Decimal(12, 2)
+  actualizadoEn DateTime @updatedAt
 
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
 
-// Gasto recurrente compartido (ej. 1,800/mes entre dos personas).
-model Cuota {
-  id        String   @id @default(cuid())
-  usuarioId String
-  concepto  String
-  activa    Boolean  @default(true)
-  creadoEn  DateTime @default(now())
+// Ingreso mensual (ej. sueldo de S/ 900). Cada mes desde `desde` espera `montoMensual`,
+// salvo que un ajuste diga otro monto para ese mes.
+model Ingreso {
+  id           String    @id @default(cuid())
+  usuarioId    String
+  nombre       String
+  montoMensual Decimal   @db.Decimal(12, 2)
+  desde        DateTime  @db.Date
+  hasta        DateTime? @db.Date
+  creadoEn     DateTime  @default(now())
 
-  usuario       Usuario             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  participantes ParticipanteCuota[]
-  periodos      PeriodoCuota[]
-  pagos         PagoCuota[]
+  usuario Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  ajustes AjusteIngreso[]
+  cobros  Cobro[]
 
   @@index([usuarioId])
 }
 
-// Personas que aportan a la cuota. Son solo nombres dentro de la cuenta del dueño.
-model ParticipanteCuota {
-  id         String  @id @default(cuid())
-  cuotaId    String
-  nombre     String
-  porcentaje Decimal @db.Decimal(5, 2)
-  esPropio   Boolean @default(false)
+// Monto distinto para un mes concreto (0 = ese mes no hay ingreso).
+model AjusteIngreso {
+  id        String  @id @default(cuid())
+  ingresoId String
+  anio      Int
+  mes       Int
+  monto     Decimal @db.Decimal(12, 2)
 
-  cuota Cuota       @relation(fields: [cuotaId], references: [id], onDelete: Cascade)
-  pagos PagoCuota[]
+  ingreso Ingreso @relation(fields: [ingresoId], references: [id], onDelete: Cascade)
 
-  @@index([cuotaId])
+  @@unique([ingresoId, anio, mes])
 }
 
-// Monto total de la cuota para un mes concreto (puede variar de mes a mes).
-model PeriodoCuota {
-  id      String  @id @default(cuid())
-  cuotaId String
-  anio    Int
-  mes     Int
-  monto   Decimal @db.Decimal(12, 2)
+// Dinero recibido; se aplica al mes pendiente más antiguo.
+model Cobro {
+  id        String   @id @default(cuid())
+  ingresoId String
+  fecha     DateTime @db.Date
+  monto     Decimal  @db.Decimal(12, 2)
+  nota      String?
+  creadoEn  DateTime @default(now())
 
-  cuota Cuota @relation(fields: [cuotaId], references: [id], onDelete: Cascade)
+  ingreso Ingreso @relation(fields: [ingresoId], references: [id], onDelete: Cascade)
 
-  @@unique([cuotaId, anio, mes])
-}
-
-// Pago de un participante; se aplica al mes pendiente más antiguo.
-model PagoCuota {
-  id             String   @id @default(cuid())
-  cuotaId        String
-  participanteId String
-  fecha          DateTime @db.Date
-  monto          Decimal  @db.Decimal(12, 2)
-  nota           String?
-  creadoEn       DateTime @default(now())
-
-  cuota        Cuota             @relation(fields: [cuotaId], references: [id], onDelete: Cascade)
-  participante ParticipanteCuota @relation(fields: [participanteId], references: [id], onDelete: Cascade)
-
-  @@index([cuotaId, participanteId])
+  @@index([ingresoId])
 }
 
 enum EstadoMeta {

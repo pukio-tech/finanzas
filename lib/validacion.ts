@@ -20,6 +20,19 @@ export const montoSchema = z
       .transform((n) => Math.round(n * 100) / 100),
   );
 
+// Como montoSchema, pero acepta 0 (un campo vacío cuenta como 0).
+export const montoOCeroSchema = z
+  .unknown()
+  .transform((raw) => (String(raw ?? "").trim() === "" ? 0 : parseMonto(raw)))
+  .pipe(
+    z
+      .number({ error: "Escribe un monto válido" })
+      .refine(Number.isFinite, "Escribe un monto válido")
+      .min(0, "El monto no puede ser negativo")
+      .max(10_000_000, "El monto es demasiado grande")
+      .transform((n) => Math.round(n * 100) / 100),
+  );
+
 export const fechaSchema = z.iso.date("Elige una fecha válida");
 
 export const mesSchema = z

@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { Banknote, ChartLine, ChevronRight } from "lucide-react";
 import { CategoriaIcono } from "@/components/categoria-icono";
 import { Card, ProgressBar, cx } from "@/components/ui";
-import { getResumen } from "@/lib/data";
-import { formatFecha, formatSoles } from "@/lib/format";
+import { getProyeccion, getResumen } from "@/lib/data";
+import { formatFecha, formatSoles, nombreMes } from "@/lib/format";
 
 export default function InicioPage() {
   return (
@@ -15,8 +15,8 @@ export default function InicioPage() {
 }
 
 async function Resumen() {
-  const r = await getResumen();
-  const faltanteCuotas = r.cuotas.reduce((s, c) => s + c.faltantePropio, 0);
+  const [r, p] = await Promise.all([getResumen(), getProyeccion()]);
+  const porCobrarTotal = Math.round((p.porCobrarVencido + p.ingresosFuturos) * 100) / 100;
 
   return (
     <div className="flex flex-col gap-5 pb-6">
@@ -25,16 +25,67 @@ async function Resumen() {
         <p className="mt-1 text-[34px] font-semibold leading-tight tracking-tight">
           {formatSoles(r.ahorroActual)}
         </p>
-        <p className="text-sm text-muted">
-          Ahorro actual · {formatSoles(r.ahorroMensual)} al mes
-        </p>
+        <Link href="/proyeccion" className="text-sm text-muted">
+          Tienes ahorrado
+        </Link>
       </header>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <Stat label="Te falta en cuotas" value={faltanteCuotas} tone={faltanteCuotas > 0 ? "warning" : "success"} href="/cuotas" />
-        <Stat label="Debes" value={r.debo} tone={r.debo > 0 ? "danger" : "muted"} href="/deudas" />
-        <Stat label="Te deben" value={r.meDeben} tone="muted" href="/deudas" className="col-span-2 sm:col-span-1" />
-      </div>
+      <Link href="/ingresos" className="active:scale-[0.99]">
+        <Card className="flex flex-col gap-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs text-muted">
+                Ingresos por cobrar hasta {nombreMes(p.hasta.mes).toLowerCase()} {p.hasta.anio}
+              </p>
+              <p className="mt-0.5 text-2xl font-semibold tracking-tight">{formatSoles(porCobrarTotal)}</p>
+            </div>
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+              <Banknote className="size-5" aria-hidden />
+            </span>
+          </div>
+          {r.ingresos.length === 0 ? (
+            <p className="text-sm text-accent">Agrega tu sueldo para ver cuánto vas a recibir</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className={cx("rounded-xl px-3 py-2", p.porCobrarVencido > 0 ? "bg-warning-soft" : "bg-surface-muted")}>
+                <p className={cx("text-xs", p.porCobrarVencido > 0 ? "text-warning" : "text-muted")}>Te deben del trabajo</p>
+                <p className={cx("font-semibold", p.porCobrarVencido > 0 && "text-warning")}>{formatSoles(p.porCobrarVencido)}</p>
+              </div>
+              <div className="rounded-xl bg-surface-muted px-3 py-2">
+                <p className="text-xs text-muted">
+                  Próximos {p.meses.length} {p.meses.length === 1 ? "mes" : "meses"}
+                </p>
+                <p className="font-semibold">{formatSoles(p.ingresosFuturos)}</p>
+              </div>
+            </div>
+          )}
+        </Card>
+      </Link>
+
+      {(r.debo > 0 || r.meDeben > 0) && (
+        <div className="grid grid-cols-2 gap-3">
+          <Stat label="Debes" value={r.debo} tone={r.debo > 0 ? "danger" : "muted"} href="/deudas" />
+          <Stat label="Te deben" value={r.meDeben} tone="muted" href="/deudas" />
+        </div>
+      )}
+
+      <Link href="/proyeccion" className="active:scale-[0.99]">
+        <Card className="flex items-center gap-3">
+          <span className={cx("flex size-10 shrink-0 items-center justify-center rounded-xl", p.restante >= 0 ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}>
+            <ChartLine className="size-5" aria-hidden />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted">
+              Proyección a {nombreMes(p.hasta.mes).toLowerCase()} {p.hasta.anio}
+            </p>
+            <p className="font-semibold">
+              {p.restante >= 0 ? "Te sobrarían " : "Te faltarían "}
+              <span className={p.restante >= 0 ? "text-success" : "text-danger"}>{formatSoles(Math.abs(p.restante))}</span>
+            </p>
+          </div>
+          <ChevronRight className="size-5 shrink-0 text-muted" aria-hidden />
+        </Card>
+      </Link>
 
       <section className="flex flex-col gap-3">
         <SectionTitle title="Metas" href="/metas" />
@@ -56,22 +107,6 @@ async function Resumen() {
           })}
         </Card>
       </section>
-
-      {r.cuotas.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <SectionTitle title="Cuotas" href="/cuotas" />
-          <Card flush className="divide-y divide-border">
-            {r.cuotas.map((c) => (
-              <Link key={c.id} href={`/cuotas/${c.id}`} className="flex min-h-12 items-center justify-between gap-3 px-4 py-3 active:bg-surface-muted">
-                <span className="truncate">{c.concepto}</span>
-                <span className={cx("shrink-0 text-sm font-medium", c.faltanteTotal > 0 ? "text-warning" : "text-success")}>
-                  {c.faltanteTotal > 0 ? `Faltan ${formatSoles(c.faltanteTotal)}` : "Al día"}
-                </span>
-              </Link>
-            ))}
-          </Card>
-        </section>
-      )}
 
       <section className="flex flex-col gap-3">
         <SectionTitle title="Últimos pagos" href="/pagos" />
