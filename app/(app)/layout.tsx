@@ -34,7 +34,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-[max(1rem,env(safe-area-inset-top))] md:px-8 md:pt-8">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-4 pt-[max(1rem,env(safe-area-inset-top))] md:px-8 md:pt-8 lg:px-10">
           {children}
         </main>
       </div>

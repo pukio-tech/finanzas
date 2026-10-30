@@ -60,110 +60,114 @@ export function PagoForm({
   };
 
   return (
-    <form onSubmit={enviar} className="flex flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <label htmlFor="monto" className="text-sm font-medium text-muted">
-          Monto
-        </label>
-        <MoneyInput id="monto" name="monto" size="lg" defaultValue={inicial.monto} autoFocus={modo === "crear"} required />
-      </div>
-
-      <Field
-        label="¿Qué pagaste?"
-        name="descripcion"
-        placeholder="Pensión de octubre"
-        defaultValue={inicial.descripcion}
-        maxLength={120}
-        required
-      />
-
-      <fieldset>
-        <legend className="mb-2 text-sm font-medium text-muted">Categoría</legend>
-        <input type="hidden" name="categoriaId" value={categoriaId} />
-        <div className="flex flex-wrap gap-2">
-          {opciones.categorias.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              aria-pressed={categoriaId === c.id}
-              onClick={() => setCategoriaId(categoriaId === c.id ? "" : c.id)}
-              className={cx(
-                "flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95",
-                categoriaId === c.id ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
-              )}
-            >
-              <CategoriaIcono nombre={c.icono} className="size-4" />
-              {c.nombre}
-            </button>
-          ))}
+    <form onSubmit={enviar} className="grid items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <label htmlFor="monto" className="text-sm font-medium text-muted">
+            Monto
+          </label>
+          <MoneyInput id="monto" name="monto" size="lg" defaultValue={inicial.monto} autoFocus={modo === "crear"} required />
         </div>
-      </fieldset>
 
-      <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-medium text-muted">Voucher (opcional)</h2>
-        <VoucherInput existente={inicial.voucher} value={voucher} onChange={setVoucher} />
-      </section>
-
-      <Card className="flex flex-col gap-4">
-        <Field label="Fecha" name="fecha" type="date" defaultValue={inicial.fecha} required />
+        <Field
+          label="¿Qué pagaste?"
+          name="descripcion"
+          placeholder="Pensión de octubre"
+          defaultValue={inicial.descripcion}
+          maxLength={120}
+          required
+        />
 
         <fieldset>
-          <legend className="mb-2 text-sm font-medium text-muted">Método</legend>
-          <input type="hidden" name="metodo" value={metodo} />
+          <legend className="mb-2 text-sm font-medium text-muted">Categoría</legend>
+          <input type="hidden" name="categoriaId" value={categoriaId} />
           <div className="flex flex-wrap gap-2">
-            {METODOS.map((m) => (
+            {opciones.categorias.map((c) => (
               <button
-                key={m.value}
+                key={c.id}
                 type="button"
-                aria-pressed={metodo === m.value}
-                onClick={() => setMetodo(m.value)}
+                aria-pressed={categoriaId === c.id}
+                onClick={() => setCategoriaId(categoriaId === c.id ? "" : c.id)}
                 className={cx(
-                  "min-h-10 rounded-full border px-3.5 text-sm transition active:scale-95",
-                  metodo === m.value ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
+                  "flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95",
+                  categoriaId === c.id ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
                 )}
               >
-                {m.label}
+                <CategoriaIcono nombre={c.icono} className="size-4" />
+                {c.nombre}
               </button>
             ))}
           </div>
         </fieldset>
 
-        <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-muted">¿Cuenta para una meta o deuda?</span>
-          <select
-            name="vinculo"
-            value={vinculo}
-            onChange={(e) => setVinculo(e.target.value)}
-            className="min-h-12 rounded-xl border border-border bg-surface px-3 outline-none focus:border-accent"
-          >
-            <option value="">No, es un gasto suelto</option>
-            {opciones.metas.length > 0 && (
-              <optgroup label="Suma a una meta">
-                {opciones.metas.map((m) => (
-                  <option key={m.id} value={`meta:${m.id}`}>
-                    {m.nombre} (faltan {formatSoles(m.falta)})
-                  </option>
-                ))}
-              </optgroup>
-            )}
-            {opciones.deudas.length > 0 && (
-              <optgroup label="Abono a una deuda tuya">
-                {opciones.deudas.map((d) => (
-                  <option key={d.id} value={`deuda:${d.id}`}>
-                    {d.nombre} (debes {formatSoles(d.falta)})
-                  </option>
-                ))}
-              </optgroup>
-            )}
-          </select>
-        </label>
-      </Card>
+        <section className="flex flex-col gap-2">
+          <h2 className="text-sm font-medium text-muted">Voucher (opcional)</h2>
+          <VoucherInput existente={inicial.voucher} value={voucher} onChange={setVoucher} />
+        </section>
+      </div>
 
-      {state.error && <Alert>{state.error}</Alert>}
+      <div className="flex flex-col gap-5">
+        <Card className="flex flex-col gap-4">
+          <Field label="Fecha" name="fecha" type="date" defaultValue={inicial.fecha} required />
 
-      <Button type="submit" variant="primary" disabled={pending} className="min-h-12 w-full">
-        {pending ? (voucher.file ? "Subiendo voucher…" : "Guardando…") : modo === "crear" ? "Guardar pago" : "Guardar cambios"}
-      </Button>
+          <fieldset>
+            <legend className="mb-2 text-sm font-medium text-muted">Método</legend>
+            <input type="hidden" name="metodo" value={metodo} />
+            <div className="flex flex-wrap gap-2">
+              {METODOS.map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  aria-pressed={metodo === m.value}
+                  onClick={() => setMetodo(m.value)}
+                  className={cx(
+                    "min-h-10 rounded-full border px-3.5 text-sm transition active:scale-95",
+                    metodo === m.value ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
+                  )}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-muted">¿Cuenta para una meta o deuda?</span>
+            <select
+              name="vinculo"
+              value={vinculo}
+              onChange={(e) => setVinculo(e.target.value)}
+              className="min-h-12 rounded-xl border border-border bg-surface px-3 outline-none focus:border-accent"
+            >
+              <option value="">No, es un gasto suelto</option>
+              {opciones.metas.length > 0 && (
+                <optgroup label="Suma a una meta">
+                  {opciones.metas.map((m) => (
+                    <option key={m.id} value={`meta:${m.id}`}>
+                      {m.nombre} (faltan {formatSoles(m.falta)})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {opciones.deudas.length > 0 && (
+                <optgroup label="Abono a una deuda tuya">
+                  {opciones.deudas.map((d) => (
+                    <option key={d.id} value={`deuda:${d.id}`}>
+                      {d.nombre} (debes {formatSoles(d.falta)})
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          </label>
+        </Card>
+
+        {state.error && <Alert>{state.error}</Alert>}
+
+        <Button type="submit" variant="primary" disabled={pending} className="min-h-12 w-full">
+          {pending ? (voucher.file ? "Subiendo voucher…" : "Guardando…") : modo === "crear" ? "Guardar pago" : "Guardar cambios"}
+        </Button>
+      </div>
     </form>
   );
 }

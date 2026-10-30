@@ -68,7 +68,7 @@ async function Lista() {
         </Card>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
         {activas.map((m) => {
           const pct = m.objetivo > 0 ? (m.aportado / m.objetivo) * 100 : 0;
           const lista = m.falta === 0;

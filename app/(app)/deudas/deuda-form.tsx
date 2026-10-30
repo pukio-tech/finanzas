@@ -36,7 +36,7 @@ export function DeudaForm({
       <fieldset>
         <legend className="mb-2 text-sm font-medium text-muted">¿Quién le debe a quién?</legend>
         <input type="hidden" name="tipo" value={tipo} />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
           {TIPOS.map((t) => (
             <button
               key={t.value}
@@ -55,7 +55,7 @@ export function DeudaForm({
         </div>
       </fieldset>
 
-      <Card className="flex flex-col gap-4">
+      <Card className="grid gap-4 lg:grid-cols-2 lg:gap-x-6">
         <Field
           label={tipo === "DEBO" ? "¿A quién le debes?" : "¿Quién te debe?"}
           name="contraparte"
@@ -77,7 +77,7 @@ export function DeudaForm({
 
       {state.error && <Alert>{state.error}</Alert>}
 
-      <Button type="submit" variant="primary" disabled={pending} className="min-h-12 w-full">
+      <Button type="submit" variant="primary" disabled={pending} className="min-h-12 w-full lg:w-64 lg:self-end">
         {pending ? "Guardando…" : modo === "crear" ? "Guardar deuda" : "Guardar cambios"}
       </Button>
     </form>

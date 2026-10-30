@@ -77,8 +77,10 @@ async function Lista() {
         </Card>
       </div>
 
-      <Grupo titulo="Lo que debes" deudas={debo} hoy={hoy} vacio="No le debes a nadie." />
-      <Grupo titulo="Lo que te deben" deudas={meDeben} hoy={hoy} vacio="Nadie te debe." />
+      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+        <Grupo titulo="Lo que debes" deudas={debo} hoy={hoy} vacio="No le debes a nadie." />
+        <Grupo titulo="Lo que te deben" deudas={meDeben} hoy={hoy} vacio="Nadie te debe." />
+      </div>
     </>
   );
 }

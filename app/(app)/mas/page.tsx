@@ -19,29 +19,34 @@ export default function MasPage() {
     <div className="flex flex-col gap-4 pt-2 pb-6">
       <h1 className="text-2xl font-semibold tracking-tight">Más</h1>
 
-      <Suspense fallback={<div className="h-16 animate-pulse rounded-2xl bg-surface-muted" />}>
-        <Perfil />
-      </Suspense>
+      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+        <div className="flex flex-col gap-5">
+          <Suspense fallback={<div className="h-16 animate-pulse rounded-2xl bg-surface-muted" />}>
+            <Perfil />
+          </Suspense>
+        </div>
+        <div className="flex flex-col gap-5">
+          <Card flush className="divide-y divide-border">
+            {LINKS.map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href} className="flex min-h-14 items-center gap-3 px-4 active:bg-surface-muted">
+                <Icon className="size-5 text-muted" aria-hidden />
+                <span className="flex-1">{label}</span>
+                <ChevronRight className="size-5 text-muted" aria-hidden />
+              </Link>
+            ))}
+          </Card>
 
-      <Card flush className="divide-y divide-border">
-        {LINKS.map(({ href, label, icon: Icon }) => (
-          <Link key={href} href={href} className="flex min-h-14 items-center gap-3 px-4 active:bg-surface-muted">
-            <Icon className="size-5 text-muted" aria-hidden />
-            <span className="flex-1">{label}</span>
-            <ChevronRight className="size-5 text-muted" aria-hidden />
-          </Link>
-        ))}
-      </Card>
-
-      <form action={cerrarSesion}>
-        <button
-          type="submit"
-          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface font-medium text-danger"
-        >
-          <LogOut className="size-5" aria-hidden />
-          Cerrar sesión
-        </button>
-      </form>
+          <form action={cerrarSesion}>
+            <button
+              type="submit"
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface font-medium text-danger"
+            >
+              <LogOut className="size-5" aria-hidden />
+              Cerrar sesión
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

@@ -19,7 +19,7 @@ export function IngresoForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <Card className="flex flex-col gap-4">
+      <Card className="grid gap-4 lg:grid-cols-2 lg:gap-x-6">
         <Field label="¿De dónde viene?" name="nombre" defaultValue={inicial.nombre} placeholder="Sueldo del trabajo" maxLength={80} required />
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-muted">¿Cuánto recibes al mes?</span>
@@ -29,14 +29,14 @@ export function IngresoForm({
           <Field label="Desde" name="desde" type="month" defaultValue={inicial.desde} required className="min-w-0" />
           <Field label="Hasta (opcional)" name="hasta" type="month" defaultValue={inicial.hasta} className="min-w-0" />
         </div>
-        <p className="text-xs text-muted">
+        <p className="text-xs text-muted lg:col-span-2">
           Cada mes se espera este monto. Si un mes cambia, lo ajustas desde el detalle del ingreso.
         </p>
       </Card>
 
       {state.error && <Alert>{state.error}</Alert>}
 
-      <Button type="submit" variant="primary" disabled={pending} className="min-h-12 w-full">
+      <Button type="submit" variant="primary" disabled={pending} className="min-h-12 w-full lg:w-64 lg:self-end">
         {pending ? "Guardando…" : modo === "crear" ? "Guardar ingreso" : "Guardar cambios"}
       </Button>
     </form>

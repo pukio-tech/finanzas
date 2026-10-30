@@ -116,28 +116,30 @@ async function Lista({ searchParams }: { searchParams: Promise<Record<string, st
           <p className="mt-1 text-sm text-muted">Usa el botón + para registrar uno.</p>
         </Card>
       ) : (
-        [...porDia].map(([dia, items]) => (
-          <section key={dia} className="flex flex-col gap-2">
-            <h2 className="px-1 text-xs font-medium tracking-wide text-muted uppercase">{dia}</h2>
-            <Card flush className="divide-y divide-border">
-              {items.map((p) => (
-                <Link key={p.id} href={`/pagos/${p.id}`} className="flex min-h-16 items-center gap-3 px-4 py-2.5 active:bg-surface-muted">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-muted">
-                    <CategoriaIcono nombre={p.categoria?.icono} className="size-5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate">{p.descripcion}</p>
-                    <p className="truncate text-xs text-muted">
-                      {[p.categoria?.nombre, p.vinculo].filter(Boolean).join(" · ") || "Sin categoría"}
-                    </p>
-                  </div>
-                  {p.tieneVoucher && <Paperclip className="size-4 shrink-0 text-muted" aria-label="Con voucher" />}
-                  <span className="shrink-0 font-medium">{formatSoles(p.monto)}</span>
-                </Link>
-              ))}
-            </Card>
-          </section>
-        ))
+        <div className="flex flex-col gap-4 lg:block lg:columns-2 lg:gap-6">
+          {[...porDia].map(([dia, items]) => (
+            <section key={dia} className="flex flex-col gap-2 lg:mb-5 lg:break-inside-avoid">
+              <h2 className="px-1 text-xs font-medium tracking-wide text-muted uppercase">{dia}</h2>
+              <Card flush className="divide-y divide-border">
+                {items.map((p) => (
+                  <Link key={p.id} href={`/pagos/${p.id}`} className="flex min-h-16 items-center gap-3 px-4 py-2.5 active:bg-surface-muted">
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-muted">
+                      <CategoriaIcono nombre={p.categoria?.icono} className="size-5" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate">{p.descripcion}</p>
+                      <p className="truncate text-xs text-muted">
+                        {[p.categoria?.nombre, p.vinculo].filter(Boolean).join(" · ") || "Sin categoría"}
+                      </p>
+                    </div>
+                    {p.tieneVoucher && <Paperclip className="size-4 shrink-0 text-muted" aria-label="Con voucher" />}
+                    <span className="shrink-0 font-medium">{formatSoles(p.monto)}</span>
+                  </Link>
+                ))}
+              </Card>
+            </section>
+          ))}
+        </div>
       )}
     </>
   );
