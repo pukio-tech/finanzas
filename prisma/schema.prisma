@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Todo dato pertenece a un usuario: ninguna cuenta ve datos de otra.
+
+model Usuario {
+  id           String   @id @default(cuid())
+  nombre       String
+  email        String   @unique
+  passwordHash String
+  creadoEn     DateTime @default(now())
+
+  plan       PlanAhorro?
+  cuotas     Cuota[]
+  metas      Meta[]
+  deudas     Deuda[]
+  categorias Categoria[]
+  pagos      Pago[]
+}
+
+// Ahorro actual y cuánto ahorra al mes; alimenta la proyección.
+model PlanAhorro {
+  id             String   @id @default(cuid())
+  usuarioId      String   @unique
+  ahorroActual   Decimal  @default(0) @db.Decimal(12, 2)
+  ahorroMensual  Decimal  @default(0) @db.Decimal(12, 2)
+  actualizadoEn  DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+}
+
+// Gasto recurrente compartido (ej. 1,800/mes entre dos personas).
+model Cuota {
+  id        String   @id @default(cuid())
+  usuarioId String
+  concepto  String
+  activa    Boolean  @default(true)
+  creadoEn  DateTime @default(now())
+
+  usuario       Usuario             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  participantes ParticipanteCuota[]
+  periodos      PeriodoCuota[]
+  pagos         PagoCuota[]
+
+  @@index([usuarioId])
+}
+
+// Personas que aportan a la cuota. Son solo nombres dentro de la cuenta del dueño.
+model ParticipanteCuota {
+  id         String  @id @default(cuid())
+  cuotaId    String
+  nombre     String
+  porcentaje Decimal @db.Decimal(5, 2)
+  esPropio   Boolean @default(false)
+
+  cuota Cuota       @relation(fields: [cuotaId], references: [id], onDelete: Cascade)
+  pagos PagoCuota[]
+
+  @@index([cuotaId])
+}
+
+// Monto total de la cuota para un mes concreto (puede variar de mes a mes).
+model PeriodoCuota {
+  id      String  @id @default(cuid())
+  cuotaId String
+  anio    Int
+  mes     Int
+  monto   Decimal @db.Decimal(12, 2)
+
+  cuota Cuota @relation(fields: [cuotaId], references: [id], onDelete: Cascade)
+
+  @@unique([cuotaId, anio, mes])
+}
+
+// Pago de un participante; se aplica al mes pendiente más antiguo.
+model PagoCuota {
+  id             String   @id @default(cuid())
+  cuotaId        String
+  participanteId String
+  fecha          DateTime @db.Date
+  monto          Decimal  @db.Decimal(12, 2)
+  nota           String?
+  creadoEn       DateTime @default(now())
+
+  cuota        Cuota             @relation(fields: [cuotaId], references: [id], onDelete: Cascade)
+  participante ParticipanteCuota @relation(fields: [participanteId], references: [id], onDelete: Cascade)
+
+  @@index([cuotaId, participanteId])
+}
+
+enum EstadoMeta {
+  ACTIVA
+  COMPLETADA
+  CANCELADA
+}
+
+// Artículo a comprar o pago a cubrir (universidad, laptop...).
+model Meta {
+  id            String     @id @default(cuid())
+  usuarioId     String
+  nombre        String
+  montoObjetivo Decimal    @db.Decimal(12, 2)
+  prioridad     Int        @default(0)
+  fechaObjetivo DateTime?  @db.Date
+  icono         String?
+  notas         String?
+  estado        EstadoMeta @default(ACTIVA)
+  creadoEn      DateTime   @default(now())
+
+  usuario Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  aportes AporteMeta[]
+
+  @@index([usuarioId])
+}
+
+model AporteMeta {
+  id     String   @id @default(cuid())
+  metaId String
+  fecha  DateTime @db.Date
+  monto  Decimal  @db.Decimal(12, 2)
+  nota   String?
+  // Si el aporte vino de un pago realizado.
+  pagoId String?  @unique
+
+  meta Meta  @relation(fields: [metaId], references: [id], onDelete: Cascade)
+  pago Pago? @relation(fields: [pagoId], references: [id], onDelete: Cascade)
+
+  @@index([metaId])
+}
+
+enum TipoDeuda {
+  DEBO
+  ME_DEBEN
+}
+
+model Deuda {
+  id          String    @id @default(cuid())
+  usuarioId   String
+  tipo        TipoDeuda
+  contraparte String
+  descripcion String?
+  monto       Decimal   @db.Decimal(12, 2)
+  fecha       DateTime  @db.Date
+  fechaLimite DateTime? @db.Date
+  creadoEn    DateTime  @default(now())
+
+  usuario Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  abonos  AbonoDeuda[]
+
+  @@index([usuarioId])
+}
+
+model AbonoDeuda {
+  id      String   @id @default(cuid())
+  deudaId String
+  fecha   DateTime @db.Date
+  monto   Decimal  @db.Decimal(12, 2)
+  nota    String?
+  // Si el abono vino de un pago realizado.
+  pagoId  String?  @unique
+
+  deuda Deuda @relation(fields: [deudaId], references: [id], onDelete: Cascade)
+  pago  Pago? @relation(fields: [pagoId], references: [id], onDelete: Cascade)
+
+  @@index([deudaId])
+}
+
+model Categoria {
+  id        String  @id @default(cuid())
+  usuarioId String
+  nombre    String
+  icono     String?
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  pagos   Pago[]
+
+  @@unique([usuarioId, nombre])
+}
+
+enum MetodoPago {
+  EFECTIVO
+  YAPE
+  PLIN
+  TRANSFERENCIA
+  TARJETA
+  OTRO
+}
+
+// Pagos realizados (universidad, compras...) con voucher opcional en S3.
+model Pago {
+  id          String     @id @default(cuid())
+  usuarioId   String
+  categoriaId String?
+  fecha       DateTime   @db.Date
+  monto       Decimal    @db.Decimal(12, 2)
+  descripcion String
+  metodo      MetodoPago @default(EFECTIVO)
+  voucherKey  String?
+  voucherTipo String?
+  creadoEn    DateTime   @default(now())
+
+  usuario   Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoria Categoria?  @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  aporte    AporteMeta?
+  abono     AbonoDeuda?
+
+  @@index([usuarioId, fecha])
+}

@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --background: #f6f7f9;
+  --surface: #ffffff;
+  --surface-muted: #eef0f3;
+  --foreground: #14171c;
+  --muted: #5d6573;
+  --border: #e2e5ea;
+  --accent: #0f766e;
+  --accent-soft: #ccfbf1;
+  --accent-foreground: #ffffff;
+  --danger: #b42318;
+  --danger-soft: #fee4e2;
+  --warning: #b54708;
+  --warning-soft: #fef0c7;
+  --success: #067647;
+  --success-soft: #dcfae6;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #0d0f12;
+    --surface: #16191e;
+    --surface-muted: #1e2228;
+    --foreground: #eef0f3;
+    --muted: #9aa3b0;
+    --border: #2a2f37;
+    --accent: #2dd4bf;
+    --accent-soft: #123b37;
+    --accent-foreground: #04201d;
+    --danger: #f97066;
+    --danger-soft: #3d1512;
+    --warning: #fdb022;
+    --warning-soft: #3a2507;
+    --success: #47cd89;
+    --success-soft: #0f2f1f;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Inputs de 16px como mínimo para que iOS no haga zoom al enfocarlos. */
+input,
+select,
+textarea {
+  font-size: 16px;
 }
