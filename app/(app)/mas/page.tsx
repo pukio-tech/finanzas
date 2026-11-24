@@ -17,7 +17,7 @@ const LINKS = [
 export default function MasPage() {
   return (
     <div className="flex flex-col gap-4 pt-2 pb-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Más</h1>
+      <h1 className="text-2xl font-medium tracking-tight">Más</h1>
 
       <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col gap-5">
@@ -29,9 +29,9 @@ export default function MasPage() {
           <Card flush className="divide-y divide-border">
             {LINKS.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href} className="flex min-h-14 items-center gap-3 px-4 active:bg-surface-muted">
-                <Icon className="size-5 text-muted" aria-hidden />
+                <Icon className="size-4.5 text-muted" aria-hidden />
                 <span className="flex-1">{label}</span>
-                <ChevronRight className="size-5 text-muted" aria-hidden />
+                <ChevronRight className="size-4.5 text-muted" aria-hidden />
               </Link>
             ))}
           </Card>
@@ -41,7 +41,7 @@ export default function MasPage() {
               type="submit"
               className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface font-medium text-danger"
             >
-              <LogOut className="size-5" aria-hidden />
+              <LogOut className="size-4.5" aria-hidden />
               Cerrar sesión
             </button>
           </form>
@@ -55,7 +55,7 @@ async function Perfil() {
   const user = await getCurrentUser();
   return (
     <Card className="flex items-center gap-3">
-      <span className="flex size-11 items-center justify-center rounded-full bg-accent-soft font-semibold text-accent">
+      <span className="flex size-11 items-center justify-center rounded-full bg-accent-soft font-medium text-accent">
         {user.nombre.charAt(0).toUpperCase()}
       </span>
       <div className="min-w-0">

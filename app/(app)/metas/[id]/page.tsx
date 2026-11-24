@@ -1,3 +1,4 @@
+import { Soles } from "@/components/soles";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -31,7 +32,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
   const activa = meta.estado === "ACTIVA";
   const porMes = activa && meta.fechaObjetivo && meta.falta > 0 ? meta.falta / mesesHasta(meta.fechaObjetivo) : null;
   const botonSecundario =
-    "flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium";
+    "flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-border bg-surface text-sm font-medium";
 
   return (
     <div className="flex flex-col gap-5 pb-6">
@@ -43,9 +44,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
           <Link
             href={`/metas/${meta.id}/editar`}
             aria-label="Editar meta"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted"
+            className="flex size-11 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface text-muted"
           >
-            <Pencil className="size-5" aria-hidden />
+            <Pencil className="size-4.5" aria-hidden />
           </Link>
         }
       />
@@ -58,25 +59,25 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
                 <CategoriaIcono nombre={meta.icono} fallback={Target} className="size-6" />
               </span>
               <div>
-                <p className="text-2xl font-semibold tracking-tight">{formatSoles(meta.aportado)}</p>
+                <p className="text-2xl font-medium tracking-tight"><Soles value={meta.aportado} /></p>
                 <p className="text-sm text-muted">de {formatSoles(meta.objetivo)}</p>
               </div>
-              <span className="ml-auto text-lg font-semibold">{Math.floor(pct)}%</span>
+              <span className="ml-auto text-lg font-medium">{Math.floor(pct)}%</span>
             </div>
             <ProgressBar value={pct} />
             <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="rounded-xl bg-surface-muted px-3 py-2">
+              <div className="rounded-[10px] bg-surface-muted px-3 py-2">
                 <p className="text-xs text-muted">Falta</p>
-                <p className="font-semibold">{formatSoles(meta.falta)}</p>
+                <p className="font-medium"><Soles value={meta.falta} /></p>
               </div>
-              <div className="rounded-xl bg-surface-muted px-3 py-2">
+              <div className="rounded-[10px] bg-surface-muted px-3 py-2">
                 <p className="text-xs text-muted">Fecha objetivo</p>
-                <p className="font-semibold">{meta.fechaObjetivo ? formatFecha(meta.fechaObjetivo) : "Sin fecha"}</p>
+                <p className="font-medium">{meta.fechaObjetivo ? formatFecha(meta.fechaObjetivo) : "Sin fecha"}</p>
               </div>
             </div>
             {porMes !== null && (
               <p className="text-sm text-muted">
-                Ahorra <span className="font-semibold text-foreground">{formatSoles(Math.ceil(porMes * 100) / 100)}</span> al mes para llegar a tiempo.
+                Ahorra <span className="font-medium text-foreground"><Soles value={Math.ceil(porMes * 100) / 100} /></span> al mes para llegar a tiempo.
               </p>
             )}
             {meta.notas && <p className="text-sm text-muted">{meta.notas}</p>}
@@ -89,9 +90,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               titulo="¿Ya lo compraste?"
               confirmar="Sí, cumplida"
               tono="accent"
-              className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-success-soft font-medium text-success"
+              className="flex min-h-12 items-center justify-center gap-2 rounded-[10px] bg-success-soft font-medium text-success"
             >
-              <CircleCheck className="size-5" aria-hidden />
+              <CircleCheck className="size-4.5" aria-hidden />
               Ya lo compré / pagué
             </ConfirmButton>
           )}
@@ -109,7 +110,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <div className="flex flex-col gap-5">
           <section className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold">Aportes</h2>
+            <h2 className="text-base font-medium">Aportes</h2>
             <Card flush className="divide-y divide-border">
               {meta.aportes.length === 0 && (
                 <p className="p-4 text-sm text-muted">
@@ -129,7 +130,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
                     )}
                     <p className="text-xs text-muted">{formatFecha(a.fecha)}</p>
                   </div>
-                  <span className="shrink-0 font-medium">{formatSoles(a.monto)}</span>
+                  <span className="shrink-0 font-medium"><Soles value={a.monto} /></span>
                   {a.pago ? (
                     <span className="size-11 shrink-0" />
                   ) : (
@@ -138,7 +139,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
                       titulo="¿Quitar el aporte?"
                       message={`${formatSoles(a.monto)} vuelven a tu dinero libre.`}
                       label="Eliminar aporte"
-                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-danger"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-[10px] text-muted hover:bg-surface-muted hover:text-danger"
                     >
                       <Trash2 className="size-[18px]" aria-hidden />
                     </ConfirmButton>

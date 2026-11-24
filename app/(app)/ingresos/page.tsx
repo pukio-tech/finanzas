@@ -14,11 +14,11 @@ export default function IngresosPage() {
     <div className="flex flex-col gap-4 pb-6">
       <PageHeader
         title="Ingresos"
-        subtitle="Tu sueldo y lo que te falta cobrar."
+        subtitle="Tu sueldo y lo que te falta cobrar"
         action={
           <Link
             href="/ingresos/nuevo"
-            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-accent px-3.5 text-sm font-medium text-accent-foreground"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] bg-accent px-3.5 text-sm font-medium text-accent-foreground"
           >
             <Plus className="size-4" aria-hidden />
             Nuevo
@@ -43,9 +43,9 @@ async function Lista() {
         </span>
         <div>
           <p className="font-medium">Agrega tu sueldo</p>
-          <p className="mt-1 text-sm text-muted">Por ejemplo, S/ 900 al mes de tu trabajo.</p>
+          <p className="mt-1 text-sm text-muted">Por ejemplo, S/ 900 al mes de tu trabajo</p>
         </div>
-        <Link href="/ingresos/nuevo" className="mt-1 flex min-h-11 items-center rounded-xl bg-accent px-4 font-medium text-accent-foreground">
+        <Link href="/ingresos/nuevo" className="mt-1 flex min-h-11 items-center rounded-[10px] bg-accent px-4 font-medium text-accent-foreground">
           Agregar ingreso
         </Link>
       </Card>
@@ -61,21 +61,21 @@ async function Lista() {
             <Card className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold">{i.nombre}</p>
+                  <p className="truncate font-medium">{i.nombre}</p>
                   <p className="text-sm text-muted">{formatSoles(i.montoMensual)} al mes</p>
                 </div>
-                <ChevronRight className="mt-0.5 size-5 shrink-0 text-muted" aria-hidden />
+                <ChevronRight className="mt-0.5 size-4.5 shrink-0 text-muted" aria-hidden />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className={cx("rounded-xl px-3 py-2", i.porCobrarVencido > 0 ? "bg-warning-soft" : "bg-success-soft")}>
+                <div className={cx("rounded-[10px] px-3 py-2", i.porCobrarVencido > 0 ? "bg-warning-soft" : "bg-success-soft")}>
                   <p className={cx("text-xs", i.porCobrarVencido > 0 ? "text-warning" : "text-success")}>Te deben</p>
-                  <p className={cx("font-semibold", i.porCobrarVencido > 0 ? "text-warning" : "text-success")}>
+                  <p className={cx("font-medium", i.porCobrarVencido > 0 ? "text-warning" : "text-success")}>
                     {i.porCobrarVencido > 0 ? formatSoles(i.porCobrarVencido) : "Al día"}
                   </p>
                 </div>
-                <div className="rounded-xl bg-surface-muted px-3 py-2">
+                <div className="rounded-[10px] bg-surface-muted px-3 py-2">
                   <p className="text-xs text-muted">{actual ? `Falta de ${nombreMes(actual.mes).toLowerCase()}` : "Este mes"}</p>
-                  <p className="font-semibold">{actual ? formatSoles(i.porCobrarMesActual) : "—"}</p>
+                  <p className="font-medium">{actual ? formatSoles(i.porCobrarMesActual) : "—"}</p>
                 </div>
               </div>
             </Card>

@@ -22,7 +22,7 @@ export function Button({ variant = "secondary", className, ...props }: ButtonPro
   return (
     <button
       className={cx(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-medium transition active:scale-[0.98] disabled:opacity-60",
+        "inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-4 text-sm font-medium transition-[color,background-color,border-color,transform] active:scale-[0.98] disabled:opacity-60",
         variant === "primary" && "bg-accent text-accent-foreground",
         variant === "secondary" && "border border-border bg-surface hover:bg-surface-muted",
         variant === "ghost" && "hover:bg-surface-muted",
@@ -47,7 +47,7 @@ export function Field({ label, hint, id, name, className, ...props }: FieldProps
         id={inputId}
         name={name}
         className={cx(
-          "min-h-12 rounded-xl border border-border bg-surface px-3.5 outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/25",
+          "min-h-12 rounded-[10px] border border-border bg-surface px-3.5 outline-none transition-[color,background-color,border-color,transform] focus:border-accent focus:ring-2 focus:ring-accent/25",
           className,
         )}
         {...props}
@@ -66,7 +66,7 @@ export function MoneyInput({
   return (
     <div
       className={cx(
-        "flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 transition focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25",
+        "flex items-center gap-2 rounded-[10px] border border-border bg-surface px-3.5 transition-[color,background-color,border-color,transform] focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25",
         size === "lg" ? "min-h-16" : "min-h-12",
         className,
       )}
@@ -77,7 +77,7 @@ export function MoneyInput({
         inputMode="decimal"
         autoComplete="off"
         placeholder="0.00"
-        className={cx("w-full min-w-0 bg-transparent outline-none", size === "lg" && "text-3xl font-semibold")}
+        className={cx("w-full min-w-0 bg-transparent outline-none", size === "lg" && "text-3xl font-medium")}
         {...props}
       />
     </div>
@@ -89,7 +89,7 @@ export function Alert({ children, tone = "danger" }: { children: ReactNode; tone
     <p
       role="alert"
       className={cx(
-        "rounded-xl px-3.5 py-2.5 text-sm",
+        "rounded-[10px] px-3.5 py-2.5 text-sm",
         tone === "danger" ? "bg-danger-soft text-danger" : "bg-success-soft text-success",
       )}
     >

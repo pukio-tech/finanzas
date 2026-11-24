@@ -48,7 +48,7 @@ export function MetaForm({
             name="fechaObjetivo"
             type="date"
             defaultValue={inicial.fechaObjetivo}
-            hint="Con una fecha se calcula cuánto ahorrar al mes."
+            hint="Con una fecha se calcula cuánto ahorrar al mes"
           />
         </Card>
       </div>
@@ -65,7 +65,7 @@ export function MetaForm({
                 aria-pressed={prioridad === p.value}
                 onClick={() => setPrioridad(p.value)}
                 className={cx(
-                  "min-h-11 rounded-xl border text-sm transition active:scale-95",
+                  "min-h-11 rounded-[10px] border text-sm transition-[color,background-color,border-color,transform] active:scale-[0.97]",
                   prioridad === p.value ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
                 )}
               >
@@ -87,7 +87,7 @@ export function MetaForm({
                 aria-label={nombre}
                 onClick={() => setIcono(nombre)}
                 className={cx(
-                  "flex aspect-square items-center justify-center rounded-xl border transition active:scale-95",
+                  "flex aspect-square items-center justify-center rounded-[10px] border transition-[color,background-color,border-color,transform] active:scale-[0.97]",
                   icono === nombre ? "border-accent bg-accent-soft text-accent" : "border-border bg-surface text-muted",
                 )}
               >

@@ -391,7 +391,21 @@ function resumenSueldo(ingresos: IngresoDetalle[]) {
             .reduce((t, m) => t + Math.round(m.falta * 100), 0) / 100,
       }
     : null;
-  return { teDeben, proximo };
+
+  // Fila de meses del ingreso principal: los últimos 6 hasta el actual y el siguiente.
+  const hoy = indiceMes(mesActual());
+  const meses = (ingresos[0]?.meses ?? [])
+    .filter((m) => indiceMes(m) >= hoy - 5 && indiceMes(m) <= hoy + 1)
+    .map((m) => ({
+      anio: m.anio,
+      mes: m.mes,
+      esperado: m.esperado,
+      recibido: m.recibido,
+      falta: m.falta,
+      vencido: m.vencido,
+      actual: m.actual,
+    }));
+  return { teDeben, proximo, meses };
 }
 
 export async function getResumen() {

@@ -48,13 +48,13 @@ function SideNavView({ pathname }: { pathname: string }) {
           key={href}
           href={href}
           className={cx(
-            "flex min-h-11 items-center gap-3 rounded-xl px-3 text-[15px] transition",
+            "flex min-h-11 items-center gap-3 rounded-[10px] px-3 text-sm transition-[color,background-color,border-color,transform]",
             isActive(pathname, href)
               ? "bg-accent-soft font-medium text-accent"
               : "text-muted hover:bg-surface-muted hover:text-foreground",
           )}
         >
-          <Icon className="size-5" aria-hidden />
+          <Icon className="size-4.5" aria-hidden />
           {label}
         </Link>
       ))}
@@ -90,7 +90,7 @@ function BottomNavView({ pathname }: { pathname: string }) {
         key={href}
         href={href}
         className={cx(
-          "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px]",
+          "flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs",
           active ? "font-medium text-accent" : "text-muted",
         )}
         aria-current={active ? "page" : undefined}
@@ -104,7 +104,7 @@ function BottomNavView({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="Principal"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] md:hidden"
     >
       <div className="mx-auto flex max-w-lg items-center px-2">
         {items.slice(0, 2)}
@@ -112,7 +112,7 @@ function BottomNavView({ pathname }: { pathname: string }) {
           <Link
             href="/pagos/nuevo"
             aria-label="Registrar pago"
-            className="-mt-6 flex size-14 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-lg shadow-accent/30 transition active:scale-95"
+            className="-mt-6 flex size-14 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-[0_8px_24px_rgba(0,0,0,0.12)] transition-transform active:scale-[0.97]"
           >
             <Plus className="size-7" aria-hidden />
           </Link>

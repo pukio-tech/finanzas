@@ -1,3 +1,4 @@
+import { Soles } from "@/components/soles";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -43,9 +44,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
           <Link
             href={`/pagos/${pago.id}/editar`}
             aria-label="Editar pago"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted"
+            className="flex size-11 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface text-muted"
           >
-            <Pencil className="size-5" aria-hidden />
+            <Pencil className="size-4.5" aria-hidden />
           </Link>
         }
       />
@@ -53,7 +54,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
       <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col gap-5">
           <Card className="flex flex-col gap-4">
-            <p className="text-[34px] leading-tight font-semibold tracking-tight">{formatSoles(pago.monto)}</p>
+            <p className="text-[32px] leading-tight font-medium tracking-tight"><Soles value={pago.monto} /></p>
             <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
               <dt className="text-muted">Fecha</dt>
               <dd>{formatFecha(pago.fecha)}</dd>
@@ -87,7 +88,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <div className="flex flex-col gap-5">
           <section className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold">Voucher</h2>
+            <h2 className="text-base font-medium">Voucher</h2>
             {!pago.voucherTipo ? (
               <Card>
                 <p className="text-sm text-muted">
@@ -111,7 +112,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               >
                 <FileText className="size-6 text-muted" aria-hidden />
                 <span className="flex-1 font-medium">Ver voucher (PDF)</span>
-                <ExternalLink className="size-5 text-muted" aria-hidden />
+                <ExternalLink className="size-4.5 text-muted" aria-hidden />
               </a>
             )}
           </section>
@@ -120,7 +121,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
             action={eliminarPago.bind(null, pago.id)}
             titulo="¿Eliminar el pago?"
             message={`"${pago.descripcion}" de ${formatSoles(pago.monto)}. También se borra su voucher y el monto vuelve a tu dinero libre.`}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium text-danger"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-border bg-surface text-sm font-medium text-danger"
           >
             <Trash2 className="size-4" aria-hidden />
             Eliminar pago

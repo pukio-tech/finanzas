@@ -1,3 +1,4 @@
+import { Soles } from "@/components/soles";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -14,7 +15,7 @@ export const metadata: Metadata = { title: "Proyección" };
 export default function ProyeccionPage({ searchParams }: PageProps<"/proyeccion">) {
   return (
     <div className="flex flex-col gap-5 pb-6">
-      <PageHeader title="Proyección" subtitle="Cuánto tendrás ahorrado y si te alcanza para tus metas." />
+      <PageHeader title="Proyección" subtitle="Cuánto tendrás ahorrado y si te alcanza para tus metas" />
       <Suspense fallback={<div className="h-[32rem] animate-pulse rounded-2xl bg-surface-muted" />}>
         <Contenido searchParams={searchParams} />
       </Suspense>
@@ -49,8 +50,8 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
             )}
             {alcanza ? "Te alcanza para tus metas" : "No te alcanza todavía"}
           </p>
-          <p className={cx("text-[34px] leading-tight font-semibold tracking-tight", alcanza ? "text-success" : "text-danger")}>
-            {formatSoles(Math.abs(p.restante))}
+          <p className={cx("text-[32px] leading-tight font-medium tracking-tight", alcanza ? "text-success" : "text-danger")}>
+            <Soles value={Math.abs(p.restante)} />
           </p>
           <p className="text-sm text-muted">
             {alcanza ? "te sobrarían" : "te faltarían"} a {nombreMes(p.hasta.mes).toLowerCase()} de {p.hasta.anio}
@@ -83,9 +84,9 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
               defaultValue={clave(p.hasta)}
               min={clave(p.desde)}
               aria-label="Otro mes"
-              className="min-h-11 min-w-0 flex-1 rounded-xl border border-border bg-surface px-3 outline-none focus:border-accent"
+              className="min-h-11 min-w-0 flex-1 rounded-[10px] border border-border bg-surface px-3 outline-none focus:border-accent"
             />
-            <button type="submit" className="min-h-11 rounded-xl border border-border bg-surface px-4 text-sm font-medium">
+            <button type="submit" className="min-h-11 rounded-[10px] border border-border bg-surface px-4 text-sm font-medium">
               Ver
             </button>
           </form>
@@ -147,7 +148,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
       </div>
       <div className="flex flex-col gap-5">
         <section className="flex flex-col gap-3">
-          <h2 className="text-base font-semibold">Mes a mes</h2>
+          <h2 className="text-base font-medium">Mes a mes</h2>
           <Card className="flex flex-col gap-3">
             {p.meses.map((m) => (
               <div key={clave(m)} className="grid grid-cols-[3.25rem_1fr] items-center gap-x-3 gap-y-0.5">
@@ -159,7 +160,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
                       style={{ width: `${Math.max(0, (m.acumulado / maximo) * 100)}%` }}
                     />
                   </div>
-                  <span className="w-24 shrink-0 text-right text-sm font-medium tabular-nums">{formatSoles(m.acumulado)}</span>
+                  <span className="w-24 shrink-0 text-right text-sm font-medium tabular-nums"><Soles value={m.acumulado} /></span>
                 </div>
                 {m.metasCubiertas.length > 0 && (
                   <p className="col-start-2 flex items-center gap-1 text-xs text-success">
@@ -205,7 +206,7 @@ function Fila({
   const contenido = (
     <>
       <div className="min-w-0 flex-1">
-        <p className={cx("truncate", destacado && "font-semibold")}>{label}</p>
+        <p className={cx("truncate", destacado && "font-medium")}>{label}</p>
         {detalle && (
           <p className={cx("text-xs", detalleTono === "danger" ? "text-danger" : detalleTono === "muted" ? "text-muted" : "text-success")}>
             {detalle}
@@ -215,7 +216,7 @@ function Fila({
       <span
         className={cx(
           "shrink-0 tabular-nums",
-          destacado && "font-semibold",
+          destacado && "font-medium",
           tono === "success" && "text-success",
           tono === "danger" && "text-danger",
           signo === "−" && !tono && "text-muted",

@@ -89,7 +89,7 @@ export function PagoForm({
                 aria-pressed={categoriaId === c.id}
                 onClick={() => setCategoriaId(categoriaId === c.id ? "" : c.id)}
                 className={cx(
-                  "flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95",
+                  "flex min-h-11 items-center gap-1.5 rounded-full border px-3.5 text-sm transition-[color,background-color,border-color,transform] active:scale-[0.97]",
                   categoriaId === c.id ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
                 )}
               >
@@ -121,7 +121,7 @@ export function PagoForm({
                   aria-pressed={metodo === m.value}
                   onClick={() => setMetodo(m.value)}
                   className={cx(
-                    "min-h-10 rounded-full border px-3.5 text-sm transition active:scale-95",
+                    "min-h-10 rounded-full border px-3.5 text-sm transition-[color,background-color,border-color,transform] active:scale-[0.97]",
                     metodo === m.value ? "border-accent bg-accent-soft font-medium text-accent" : "border-border bg-surface",
                   )}
                 >
@@ -137,7 +137,7 @@ export function PagoForm({
               name="vinculo"
               value={vinculo}
               onChange={(e) => setVinculo(e.target.value)}
-              className="min-h-12 rounded-xl border border-border bg-surface px-3 outline-none focus:border-accent"
+              className="min-h-12 rounded-[10px] border border-border bg-surface px-3 outline-none focus:border-accent"
             >
               <option value="">No, es un gasto suelto</option>
               {opciones.metas.length > 0 && (

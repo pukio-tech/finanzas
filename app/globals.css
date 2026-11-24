@@ -56,12 +56,22 @@
   --color-success-soft: var(--success-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Una sola curva y duración para todo el movimiento de la interfaz. */
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   -webkit-tap-highlight-color: transparent;
+  /* Cifras de ancho fijo: los montos se alinean en columna, como en un recibo. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Un solo trazo para todos los íconos (lucide usa 2 por defecto). */
+svg.lucide {
+  stroke-width: 1.5;
 }
 
 /* Inputs de 16px como mínimo para que iOS no haga zoom al enfocarlos. */

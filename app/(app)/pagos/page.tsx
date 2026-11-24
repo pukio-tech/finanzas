@@ -1,3 +1,4 @@
+import { Soles } from "@/components/soles";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { io } from "next/cache";
@@ -20,7 +21,7 @@ export default function PagosPage({ searchParams }: PageProps<"/pagos">) {
         action={
           <Link
             href="/pagos/nuevo"
-            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-accent px-3.5 text-sm font-medium text-accent-foreground"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] bg-accent px-3.5 text-sm font-medium text-accent-foreground"
           >
             <Plus className="size-4" aria-hidden />
             Nuevo
@@ -66,11 +67,11 @@ async function Lista({ searchParams }: { searchParams: Promise<Record<string, st
   return (
     <>
       <Card className="flex items-center justify-between gap-2 p-2">
-        <Link href={href(sumarMeses(mes, -1), categoriaId)} aria-label="Mes anterior" className="flex size-11 items-center justify-center rounded-xl hover:bg-surface-muted">
-          <ChevronLeft className="size-5" aria-hidden />
+        <Link href={href(sumarMeses(mes, -1), categoriaId)} aria-label="Mes anterior" className="flex size-11 items-center justify-center rounded-[10px] hover:bg-surface-muted">
+          <ChevronLeft className="size-4.5" aria-hidden />
         </Link>
         <div className="text-center">
-          <p className="font-semibold">
+          <p className="font-medium">
             {nombreMes(mes.mes)} {mes.anio}
           </p>
           <p className="text-sm text-muted">Total: {formatSoles(total)}</p>
@@ -79,9 +80,9 @@ async function Lista({ searchParams }: { searchParams: Promise<Record<string, st
           href={href(sumarMeses(mes, 1), categoriaId)}
           aria-label="Mes siguiente"
           aria-disabled={esMesActual}
-          className={cx("flex size-11 items-center justify-center rounded-xl hover:bg-surface-muted", esMesActual && "pointer-events-none opacity-30")}
+          className={cx("flex size-11 items-center justify-center rounded-[10px] hover:bg-surface-muted", esMesActual && "pointer-events-none opacity-30")}
         >
-          <ChevronRight className="size-5" aria-hidden />
+          <ChevronRight className="size-4.5" aria-hidden />
         </Link>
       </Card>
 
@@ -113,18 +114,18 @@ async function Lista({ searchParams }: { searchParams: Promise<Record<string, st
       {pagos.length === 0 ? (
         <Card className="py-10 text-center">
           <p className="font-medium">No hay pagos en este mes</p>
-          <p className="mt-1 text-sm text-muted">Usa el botón + para registrar uno.</p>
+          <p className="mt-1 text-sm text-muted">Usa el botón + para registrar uno</p>
         </Card>
       ) : (
         <div className="flex flex-col gap-4 lg:block lg:columns-2 lg:gap-6">
           {[...porDia].map(([dia, items]) => (
             <section key={dia} className="flex flex-col gap-2 lg:mb-5 lg:break-inside-avoid">
-              <h2 className="px-1 text-xs font-medium tracking-wide text-muted uppercase">{dia}</h2>
+              <h2 className="px-1 text-sm text-muted">{dia}</h2>
               <Card flush className="divide-y divide-border">
                 {items.map((p) => (
                   <Link key={p.id} href={`/pagos/${p.id}`} className="flex min-h-16 items-center gap-3 px-4 py-2.5 active:bg-surface-muted">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-muted">
-                      <CategoriaIcono nombre={p.categoria?.icono} className="size-5" />
+                    <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-surface-muted text-muted">
+                      <CategoriaIcono nombre={p.categoria?.icono} className="size-4.5" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate">{p.descripcion}</p>
@@ -133,7 +134,7 @@ async function Lista({ searchParams }: { searchParams: Promise<Record<string, st
                       </p>
                     </div>
                     {p.tieneVoucher && <Paperclip className="size-4 shrink-0 text-muted" aria-label="Con voucher" />}
-                    <span className="shrink-0 font-medium">{formatSoles(p.monto)}</span>
+                    <span className="shrink-0 font-medium"><Soles value={p.monto} /></span>
                   </Link>
                 ))}
               </Card>

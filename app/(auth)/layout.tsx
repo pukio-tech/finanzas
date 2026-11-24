@@ -9,8 +9,8 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           <span className="flex size-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
             <Wallet className="size-7" aria-hidden />
           </span>
-          <h1 className="text-2xl font-semibold tracking-tight">Finanzas</h1>
-          <p className="text-sm text-muted">Tus cuotas, pagos, metas y deudas en un solo lugar.</p>
+          <h1 className="text-2xl font-medium tracking-tight">Finanzas</h1>
+          <p className="text-sm text-muted">Tu sueldo, lo que te deben y lo que ahorras para tus metas</p>
         </div>
         {children}
       </div>

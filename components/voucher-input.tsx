@@ -94,7 +94,7 @@ export function VoucherInput({
       />
 
       {value.file || mostrarExistente ? (
-        <div className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2">
+        <div className="flex items-center gap-3 rounded-[10px] border border-border bg-surface p-2">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob:)
             <img src={preview} alt="Vista previa del voucher" className="size-16 shrink-0 rounded-lg object-cover" />
@@ -116,9 +116,9 @@ export function VoucherInput({
             type="button"
             onClick={() => onChange({ file: null, quitar: Boolean(existente) })}
             aria-label="Quitar voucher"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-danger"
+            className="flex size-11 shrink-0 items-center justify-center rounded-[10px] text-muted hover:bg-surface-muted hover:text-danger"
           >
-            <X className="size-5" aria-hidden />
+            <X className="size-4.5" aria-hidden />
           </button>
         </div>
       ) : (
@@ -127,7 +127,7 @@ export function VoucherInput({
             type="button"
             onClick={() => camaraRef.current?.click()}
             disabled={procesando}
-            className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-surface text-sm active:scale-[0.98]"
+            className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-[10px] border border-dashed border-border bg-surface text-sm active:scale-[0.98]"
           >
             {procesando ? <LoaderCircle className="size-6 animate-spin text-muted" aria-hidden /> : <Camera className="size-6 text-muted" aria-hidden />}
             Tomar foto
@@ -136,7 +136,7 @@ export function VoucherInput({
             type="button"
             onClick={() => archivoRef.current?.click()}
             disabled={procesando}
-            className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-surface text-sm active:scale-[0.98]"
+            className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-[10px] border border-dashed border-border bg-surface text-sm active:scale-[0.98]"
           >
             <ImageUp className="size-6 text-muted" aria-hidden />
             Galería o PDF

@@ -1,3 +1,4 @@
+import { Soles } from "@/components/soles";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -15,11 +16,11 @@ export default function DeudasPage() {
     <div className="flex flex-col gap-4 pb-6">
       <PageHeader
         title="Deudas"
-        subtitle="Lo que debes y lo que te deben."
+        subtitle="Lo que debes y lo que te deben"
         action={
           <Link
             href="/deudas/nueva"
-            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-xl bg-accent px-3.5 text-sm font-medium text-accent-foreground"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-[10px] bg-accent px-3.5 text-sm font-medium text-accent-foreground"
           >
             <Plus className="size-4" aria-hidden />
             Nueva
@@ -47,9 +48,9 @@ async function Lista() {
         </span>
         <div>
           <p className="font-medium">No tienes deudas registradas</p>
-          <p className="mt-1 text-sm text-muted">Anota lo que debes o lo que te prestaste para no olvidarlo.</p>
+          <p className="mt-1 text-sm text-muted">Anota lo que debes o lo que te prestaste para no olvidarlo</p>
         </div>
-        <Link href="/deudas/nueva" className="mt-1 flex min-h-11 items-center rounded-xl bg-accent px-4 font-medium text-accent-foreground">
+        <Link href="/deudas/nueva" className="mt-1 flex min-h-11 items-center rounded-[10px] bg-accent px-4 font-medium text-accent-foreground">
           Agregar deuda
         </Link>
       </Card>
@@ -67,19 +68,19 @@ async function Lista() {
           <p className="flex items-center gap-1 text-xs text-muted">
             <ArrowUpRight className="size-3.5" aria-hidden /> Debes
           </p>
-          <p className={cx("mt-1 text-lg font-semibold", total(debo) > 0 && "text-danger")}>{formatSoles(total(debo))}</p>
+          <p className={cx("mt-1 text-lg font-medium", total(debo) > 0 && "text-danger")}><Soles value={total(debo)} /></p>
         </Card>
         <Card className="p-3.5">
           <p className="flex items-center gap-1 text-xs text-muted">
             <ArrowDownLeft className="size-3.5" aria-hidden /> Te deben
           </p>
-          <p className={cx("mt-1 text-lg font-semibold", total(meDeben) > 0 && "text-success")}>{formatSoles(total(meDeben))}</p>
+          <p className={cx("mt-1 text-lg font-medium", total(meDeben) > 0 && "text-success")}><Soles value={total(meDeben)} /></p>
         </Card>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
-        <Grupo titulo="Lo que debes" deudas={debo} hoy={hoy} vacio="No le debes a nadie." />
-        <Grupo titulo="Lo que te deben" deudas={meDeben} hoy={hoy} vacio="Nadie te debe." />
+        <Grupo titulo="Lo que debes" deudas={debo} hoy={hoy} vacio="No le debes a nadie" />
+        <Grupo titulo="Lo que te deben" deudas={meDeben} hoy={hoy} vacio="Nadie te debe" />
       </div>
     </>
   );
@@ -91,7 +92,7 @@ function Grupo({ titulo, deudas, hoy, vacio }: { titulo: string; deudas: Deuda[]
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="px-1 text-base font-semibold">{titulo}</h2>
+      <h2 className="px-1 text-base font-medium">{titulo}</h2>
       {abiertas.length === 0 && <p className="px-1 text-sm text-muted">{vacio}</p>}
       {abiertas.map((d) => {
         const vencida = d.fechaLimite && isoDesdeFecha(d.fechaLimite) < hoy;
@@ -100,15 +101,15 @@ function Grupo({ titulo, deudas, hoy, vacio }: { titulo: string; deudas: Deuda[]
             <Card className="flex flex-col gap-2.5">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold">{d.contraparte}</p>
+                  <p className="truncate font-medium">{d.contraparte}</p>
                   {d.descripcion && <p className="truncate text-xs text-muted">{d.descripcion}</p>}
                 </div>
-                <span className="shrink-0 font-semibold">{formatSoles(d.pendiente)}</span>
+                <span className="shrink-0 font-medium"><Soles value={d.pendiente} /></span>
               </div>
               <ProgressBar value={d.monto > 0 ? (d.abonado / d.monto) * 100 : 0} />
               <div className="flex justify-between gap-2 text-xs text-muted">
                 <span>
-                  {formatSoles(d.abonado)} de {formatSoles(d.monto)}
+                  <Soles value={d.abonado} /> de <Soles value={d.monto} />
                 </span>
                 {d.fechaLimite && (
                   <span className={cx(vencida && "font-medium text-danger")}>

@@ -10,17 +10,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-1">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-6 border-r border-border bg-surface p-4 md:flex">
-        <Link href="/" className="flex items-center gap-2 px-2 text-lg font-semibold">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-            <Wallet className="size-5" aria-hidden />
+        <Link href="/" className="flex items-center gap-2 px-2 text-lg font-medium">
+          <span className="flex size-9 items-center justify-center rounded-[10px] bg-accent text-accent-foreground">
+            <Wallet className="size-4.5" aria-hidden />
           </span>
           Finanzas
         </Link>
         <Link
           href="/pagos/nuevo"
-          className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-accent px-4 text-[15px] font-medium text-accent-foreground"
+          className="flex min-h-11 items-center justify-center gap-2 rounded-[10px] bg-accent px-4 text-sm font-medium text-accent-foreground"
         >
-          <Plus className="size-5" aria-hidden />
+          <Plus className="size-4.5" aria-hidden />
           Registrar pago
         </Link>
         <Suspense fallback={<SideNavFallback />}>
@@ -58,9 +58,9 @@ async function UserMenu() {
         <button
           type="submit"
           aria-label="Cerrar sesión"
-          className="flex size-10 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-foreground"
+          className="flex size-10 items-center justify-center rounded-[10px] text-muted hover:bg-surface-muted hover:text-foreground"
         >
-          <LogOut className="size-5" aria-hidden />
+          <LogOut className="size-4.5" aria-hidden />
         </button>
       </form>
     </div>

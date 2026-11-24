@@ -44,7 +44,7 @@ export function DeudaForm({
               aria-pressed={tipo === t.value}
               onClick={() => setTipo(t.value)}
               className={cx(
-                "flex min-h-14 flex-col justify-center rounded-xl border px-3.5 text-left transition active:scale-[0.98]",
+                "flex min-h-14 flex-col justify-center rounded-[10px] border px-3.5 text-left transition-[color,background-color,border-color,transform] active:scale-[0.98]",
                 tipo === t.value ? "border-accent bg-accent-soft" : "border-border bg-surface",
               )}
             >

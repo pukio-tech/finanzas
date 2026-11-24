@@ -1,3 +1,4 @@
+import { Soles } from "@/components/soles";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
@@ -45,9 +46,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
           <Link
             href={`/deudas/${deuda.id}/editar`}
             aria-label="Editar deuda"
-            className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-surface text-muted"
+            className="flex size-11 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface text-muted"
           >
-            <Pencil className="size-5" aria-hidden />
+            <Pencil className="size-4.5" aria-hidden />
           </Link>
         }
       />
@@ -57,8 +58,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
           <Card className="flex flex-col gap-4">
             <div>
               <p className="text-sm text-muted">{deuda.pendiente > 0 ? "Pendiente" : "Saldada"}</p>
-              <p className={cx("text-[34px] leading-tight font-semibold tracking-tight", deuda.pendiente === 0 && "text-success")}>
-                {formatSoles(deuda.pendiente)}
+              <p className={cx("text-[32px] leading-tight font-medium tracking-tight", deuda.pendiente === 0 && "text-success")}>
+                <Soles value={deuda.pendiente} />
               </p>
             </div>
             <ProgressBar value={deuda.monto > 0 ? (deuda.abonado / deuda.monto) * 100 : 0} />
@@ -66,15 +67,15 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               {aumentado > 0 && (
                 <>
                   <dt className="text-muted">Monto inicial</dt>
-                  <dd>{formatSoles(deuda.montoInicial)}</dd>
+                  <dd><Soles value={deuda.montoInicial} /></dd>
                   <dt className="text-muted">Se sumó</dt>
                   <dd>+ {formatSoles(aumentado)}</dd>
                 </>
               )}
               <dt className="text-muted">Monto total</dt>
-              <dd>{formatSoles(deuda.monto)}</dd>
+              <dd><Soles value={deuda.monto} /></dd>
               <dt className="text-muted">{debo ? "Pagado" : "Te devolvió"}</dt>
-              <dd>{formatSoles(deuda.abonado)}</dd>
+              <dd><Soles value={deuda.abonado} /></dd>
               <dt className="text-muted">Desde</dt>
               <dd>{formatFecha(deuda.fecha)}</dd>
               {deuda.fechaLimite && (
@@ -125,9 +126,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         </div>
         <div className="flex flex-col gap-5">
           <section className="flex flex-col gap-3">
-            <h2 className="text-base font-semibold">Movimientos</h2>
+            <h2 className="text-base font-medium">Movimientos</h2>
             <Card flush className="divide-y divide-border">
-              {movimientos.length === 0 && <p className="p-4 text-sm text-muted">Aún no hay abonos ni aumentos.</p>}
+              {movimientos.length === 0 && <p className="p-4 text-sm text-muted">Aún no hay abonos ni aumentos</p>}
               {movimientos.map((m) => (
                 <div key={m.id} className="flex items-center gap-3 py-2.5 pr-2 pl-4">
                   <div className="min-w-0 flex-1">
@@ -162,7 +163,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
                           : `La deuda baja ${formatSoles(m.monto)} y ese monto ${debo ? "sale de" : "vuelve a"} tu dinero libre.`
                       }
                       label={m.clase === "abono" ? "Eliminar abono" : "Quitar aumento"}
-                      className="flex size-11 shrink-0 items-center justify-center rounded-xl text-muted hover:bg-surface-muted hover:text-danger"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-[10px] text-muted hover:bg-surface-muted hover:text-danger"
                     >
                       <Trash2 className="size-[18px]" aria-hidden />
                     </ConfirmButton>
@@ -176,7 +177,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
             action={eliminarDeuda.bind(null, deuda.id)}
             titulo="¿Eliminar la deuda?"
             message={`Se borra la deuda con ${deuda.contraparte} con sus abonos y aumentos. Tu dinero libre no cambia y los pagos vinculados se conservan.`}
-            className="flex min-h-12 items-center justify-center gap-2 rounded-xl border border-border bg-surface text-sm font-medium text-danger"
+            className="flex min-h-12 items-center justify-center gap-2 rounded-[10px] border border-border bg-surface text-sm font-medium text-danger"
           >
             <Trash2 className="size-4" aria-hidden />
             Eliminar deuda

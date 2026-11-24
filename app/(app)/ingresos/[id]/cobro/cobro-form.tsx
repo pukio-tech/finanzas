@@ -1,9 +1,9 @@
 "use client";
 
+import { Soles } from "@/components/soles";
 import { useState } from "react";
 import { useFormAction } from "@/components/use-form-action";
 import { Alert, Button, Card, Field, MoneyInput } from "@/components/ui";
-import { formatSoles } from "@/lib/format";
 import { registrarCobro } from "../../actions";
 
 export function CobroForm({
@@ -33,9 +33,9 @@ export function CobroForm({
                   key={s.label}
                   type="button"
                   onClick={() => setMonto(s.valor.toFixed(2))}
-                  className="min-h-10 rounded-full border border-border bg-surface px-3.5 text-sm active:scale-95"
+                  className="min-h-10 rounded-full border border-border bg-surface px-3.5 text-sm active:scale-[0.97]"
                 >
-                  {s.label}: <span className="font-medium">{formatSoles(s.valor)}</span>
+                  {s.label}: <span className="font-medium"><Soles value={s.valor} /></span>
                 </button>
               ))}
             </div>

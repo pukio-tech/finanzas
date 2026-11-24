@@ -67,10 +67,10 @@ export function ConfirmButton({
                 tono === "danger" ? "bg-danger-soft text-danger" : "bg-accent-soft text-accent",
               )}
             >
-              <Icono className="size-5" aria-hidden />
+              <Icono className="size-4.5" aria-hidden />
             </span>
             <div className="min-w-0">
-              <p id={tituloId} className="font-semibold">{titulo ?? (tono === "danger" ? "¿Seguro?" : "Confirmar")}</p>
+              <p id={tituloId} className="font-medium">{titulo ?? (tono === "danger" ? "¿Seguro?" : "Confirmar")}</p>
               <p className="mt-1 text-sm text-muted">{message}</p>
             </div>
           </div>
@@ -79,7 +79,7 @@ export function ConfirmButton({
               type="button"
               onClick={cerrar}
               autoFocus
-              className="min-h-12 rounded-xl border border-border bg-surface font-medium active:scale-[0.98]"
+              className="min-h-12 rounded-[10px] border border-border bg-surface font-medium active:scale-[0.98]"
             >
               Cancelar
             </button>
@@ -93,7 +93,7 @@ export function ConfirmButton({
                 })
               }
               className={cx(
-                "min-h-12 rounded-xl font-medium active:scale-[0.98] disabled:opacity-60",
+                "min-h-12 rounded-[10px] font-medium active:scale-[0.98] disabled:opacity-60",
                 tono === "danger" ? "bg-danger text-white" : "bg-accent text-accent-foreground",
               )}
             >
