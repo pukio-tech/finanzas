@@ -60,7 +60,7 @@ export function PagoForm({
   };
 
   return (
-    <form onSubmit={enviar} className="grid items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
+    <form onSubmit={enviar} className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <label htmlFor="monto" className="text-sm font-medium text-muted">

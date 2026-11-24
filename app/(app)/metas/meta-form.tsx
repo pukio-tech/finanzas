@@ -35,7 +35,7 @@ export function MetaForm({
   const [prioridad, setPrioridad] = useState(inicial.prioridad);
 
   return (
-    <form onSubmit={onSubmit} className="grid items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
+    <form onSubmit={onSubmit} className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
       <div className="flex flex-col gap-5">
         <Card className="flex flex-col gap-4">
           <Field label="¿Qué quieres comprar o pagar?" name="nombre" defaultValue={inicial.nombre} placeholder="Laptop" maxLength={80} required />

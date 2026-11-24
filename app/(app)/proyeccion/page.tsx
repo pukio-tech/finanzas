@@ -39,7 +39,7 @@ async function Contenido({ searchParams }: { searchParams: Promise<Record<string
   const opcionesHasta = [3, 6, 12].map((n) => sumarMeses(p.desde, n - 1));
 
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+    <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
       <div className="flex flex-col gap-5">
         <Card className={cx("flex flex-col gap-1 border-2", alcanza ? "border-success/40" : "border-danger/40")}>
           <p className="flex items-center gap-1.5 text-sm font-medium">

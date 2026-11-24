@@ -69,7 +69,7 @@ async function Lista() {
         </Card>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
         {activas.map((m) => {
           const pct = m.objetivo > 0 ? (m.aportado / m.objetivo) * 100 : 0;
           const lista = m.falta === 0;

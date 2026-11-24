@@ -19,7 +19,7 @@ export function CobroForm({
   const [monto, setMonto] = useState("");
 
   return (
-    <form onSubmit={onSubmit} className="grid items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
+    <form onSubmit={onSubmit} className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-x-8">
       <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <label htmlFor="monto" className="text-sm font-medium text-muted">

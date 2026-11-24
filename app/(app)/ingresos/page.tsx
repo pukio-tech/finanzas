@@ -53,7 +53,7 @@ async function Lista() {
   }
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2 lg:gap-4">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
       {ingresos.map((i) => {
         const actual = i.meses.find((m) => m.actual);
         return (

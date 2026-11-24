@@ -19,7 +19,7 @@ export default function MasPage() {
     <div className="flex flex-col gap-4 pt-2 pb-6">
       <h1 className="text-2xl font-medium tracking-tight">Más</h1>
 
-      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col gap-5">
           <Suspense fallback={<div className="h-16 animate-pulse rounded-2xl bg-surface-muted" />}>
             <Perfil />

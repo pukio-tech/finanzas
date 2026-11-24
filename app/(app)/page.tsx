@@ -24,12 +24,15 @@ async function Resumen() {
 
   return (
     <div className="flex flex-col gap-5 pb-6 lg:gap-6">
-      <h1 className="pt-2 text-2xl font-medium tracking-tight">
-        {nombreMes(hoy.mes)} {hoy.anio}
-      </h1>
+      <header className="pt-2">
+        <p className="text-sm text-muted">Hola, {primerNombre(r.user.nombre)}</p>
+        <h1 className="text-2xl font-medium tracking-tight">
+          {nombreMes(hoy.mes)} {hoy.anio}
+        </h1>
+      </header>
 
       {/* Lo que tienes hoy. Las proyecciones a futuro viven en /proyeccion. */}
-      <div className="grid gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <Card className="flex flex-col justify-center gap-1 lg:p-5">
           <p className="text-sm text-muted">Dinero libre</p>
           <p className="text-[32px] leading-tight font-medium tracking-tight">
@@ -92,7 +95,7 @@ async function Resumen() {
         </Link>
       </div>
 
-      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <section className="flex flex-col gap-3">
           <SectionTitle title="Metas" href="/metas" />
           <Card className="flex flex-col gap-4">
@@ -142,6 +145,12 @@ async function Resumen() {
       </div>
     </div>
   );
+}
+
+// "RONAL JAMES LLAPAPASCA" → "Ronal": primer nombre con mayúscula inicial.
+function primerNombre(nombre: string) {
+  const primero = nombre.trim().split(/\s+/)[0] ?? "";
+  return primero.charAt(0).toUpperCase() + primero.slice(1).toLowerCase();
 }
 
 type MesSueldo = {

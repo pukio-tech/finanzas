@@ -55,7 +55,7 @@ export function DeudaForm({
         </div>
       </fieldset>
 
-      <Card className="grid gap-4 lg:grid-cols-2 lg:gap-x-6">
+      <Card className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-x-6">
         <Field
           label={tipo === "DEBO" ? "¿A quién le debes?" : "¿Quién te debe?"}
           name="contraparte"

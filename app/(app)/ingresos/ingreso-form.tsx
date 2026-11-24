@@ -19,7 +19,7 @@ export function IngresoForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <Card className="grid gap-4 lg:grid-cols-2 lg:gap-x-6">
+      <Card className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-x-6">
         <Field label="¿De dónde viene?" name="nombre" defaultValue={inicial.nombre} placeholder="Sueldo del trabajo" maxLength={80} required />
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-muted">¿Cuánto recibes al mes?</span>

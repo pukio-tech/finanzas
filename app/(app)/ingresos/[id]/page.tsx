@@ -49,7 +49,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         }
       />
 
-      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-2 gap-3">
             <Card className={cx("p-3.5", ingreso.porCobrarVencido > 0 ? "bg-warning-soft" : "bg-success-soft")}>
