@@ -25,6 +25,12 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
   const ingreso = await getIngreso(id);
   const desde = ingreso.desde;
 
+  // Totales de tu sueldo desde que empezó hasta el mes actual.
+  const hastaHoy = ingreso.meses.filter((m) => m.vencido || m.actual);
+  const ganado = hastaHoy.reduce((t, m) => t + Math.round(m.esperado * 100), 0) / 100;
+  const porCobrar = Math.round((ingreso.porCobrarVencido + ingreso.porCobrarMesActual) * 100) / 100;
+  const ultimoMes = hastaHoy.at(-1);
+
   return (
     <div className="flex flex-col gap-5 pb-6">
       <PageHeader
@@ -56,6 +62,27 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
               <p className="mt-1 text-lg font-semibold">{formatSoles(ingreso.porCobrarMesActual)}</p>
             </Card>
           </div>
+          <Card flush className="divide-y divide-border text-sm">
+            <div className="flex items-baseline justify-between gap-3 px-4 py-3">
+              <div>
+                <p className="font-medium">Total de tu sueldo</p>
+                <p className="text-xs text-muted">
+                  De {nombreMes(desde.getUTCMonth() + 1).toLowerCase()} {desde.getUTCFullYear()}
+                  {ultimoMes && ` a ${nombreMes(ultimoMes.mes).toLowerCase()} ${ultimoMes.anio}`}, sin gastar nada
+                </p>
+              </div>
+              <span className="text-lg font-semibold">{formatSoles(ganado)}</span>
+            </div>
+            <div className="flex justify-between gap-3 px-4 py-2.5">
+              <span className="text-muted">Ya cobraste</span>
+              <span className="font-medium text-success">{formatSoles(ingreso.totalRecibido)}</span>
+            </div>
+            <div className="flex justify-between gap-3 px-4 py-2.5">
+              <span className="text-muted">Falta cobrar (incluye este mes)</span>
+              <span className="font-medium">{formatSoles(porCobrar)}</span>
+            </div>
+          </Card>
+
           {ingreso.saldoAFavor > 0 && (
             <p className="-mt-2 px-1 text-xs text-success">Cobraste {formatSoles(ingreso.saldoAFavor)} por adelantado.</p>
           )}

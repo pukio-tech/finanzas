@@ -138,9 +138,24 @@ model Deuda {
   creadoEn    DateTime  @default(now())
 
   usuario Usuario      @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  abonos  AbonoDeuda[]
+  abonos   AbonoDeuda[]
+  aumentos AumentoDeuda[]
 
   @@index([usuarioId])
+}
+
+// Dinero que se suma a una deuda ya existente (te prestaron más o prestaste más).
+model AumentoDeuda {
+  id       String   @id @default(cuid())
+  deudaId  String
+  fecha    DateTime @db.Date
+  monto    Decimal  @db.Decimal(12, 2)
+  nota     String?
+  creadoEn DateTime @default(now())
+
+  deuda Deuda @relation(fields: [deudaId], references: [id], onDelete: Cascade)
+
+  @@index([deudaId])
 }
 
 model AbonoDeuda {

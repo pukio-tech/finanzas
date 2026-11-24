@@ -53,8 +53,13 @@ export async function guardarDeuda(deudaId: string | null, _prev: FormState, for
   const { tipo, contraparte, descripcion, monto, fecha, fechaLimite } = parsed.data;
   if (deudaId && actual && actual.tipo !== tipo) {
     // Los abonos ya movieron tu dinero libre en un sentido; cambiar el tipo lo descuadraría.
-    const abonos = await db.abonoDeuda.count({ where: { deudaId } });
-    if (abonos > 0) return fallo(formData, "Esta deuda ya tiene abonos; no puedes cambiar quién le debe a quién.");
+    const [abonos, aumentos] = await Promise.all([
+      db.abonoDeuda.count({ where: { deudaId } }),
+      db.aumentoDeuda.count({ where: { deudaId } }),
+    ]);
+    if (abonos + aumentos > 0) {
+      return fallo(formData, "Esta deuda ya tiene movimientos; no puedes cambiar quién le debe a quién.");
+    }
   }
 
   const data = {
@@ -113,6 +118,39 @@ export async function eliminarAbono(deudaId: string, abonoId: string) {
   await db.$transaction([
     db.abonoDeuda.delete({ where: { id: abono.id } }),
     moverAhorro(usuarioId, tipo === "DEBO" ? monto : -monto),
+  ]);
+  refrescar(deudaId);
+}
+
+// Sumar a la deuda: te prestaron más (DEBO, entra a tu dinero libre)
+// o prestaste más (ME_DEBEN, sale de tu dinero libre).
+export async function agregarAumento(deudaId: string, _prev: FormState, formData: FormData): Promise<FormState> {
+  const { usuarioId, tipo } = await deudaPropia(deudaId);
+  const parsed = abonoSchema.safeParse({
+    monto: formData.get("monto"),
+    fecha: formData.get("fecha"),
+    nota: formData.get("nota") ?? "",
+  });
+  if (!parsed.success) return fallo(formData, primerError(parsed.error));
+
+  await db.$transaction([
+    db.aumentoDeuda.create({
+      data: { deudaId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
+    }),
+    moverAhorro(usuarioId, tipo === "DEBO" ? parsed.data.monto : -parsed.data.monto),
+  ]);
+  refrescar(deudaId);
+  return { ok: true };
+}
+
+export async function eliminarAumento(deudaId: string, aumentoId: string) {
+  const { usuarioId, tipo } = await deudaPropia(deudaId);
+  const aumento = await db.aumentoDeuda.findFirst({ where: { id: aumentoId, deudaId } });
+  if (!aumento) return;
+  const monto = aumento.monto.toNumber();
+  await db.$transaction([
+    db.aumentoDeuda.delete({ where: { id: aumento.id } }),
+    moverAhorro(usuarioId, tipo === "DEBO" ? -monto : monto),
   ]);
   refrescar(deudaId);
 }

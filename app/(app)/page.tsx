@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { Banknote, ChartLine, ChevronRight } from "lucide-react";
+import { Banknote, ChevronRight, HandCoins } from "lucide-react";
 import { CategoriaIcono } from "@/components/categoria-icono";
 import { Card, ProgressBar, cx } from "@/components/ui";
-import { getProyeccion, getResumen } from "@/lib/data";
+import { getResumen } from "@/lib/data";
 import { formatFecha, formatSoles, nombreMes } from "@/lib/format";
 
 export default function InicioPage() {
@@ -15,9 +15,9 @@ export default function InicioPage() {
 }
 
 async function Resumen() {
-  const [r, p] = await Promise.all([getResumen(), getProyeccion()]);
-  const porCobrarTotal = Math.round((p.porCobrarVencido + p.ingresosFuturos) * 100) / 100;
+  const r = await getResumen();
   const separado = Math.round(r.metas.reduce((s, m) => s + m.aportado, 0) * 100) / 100;
+  const { teDeben, proximo } = r.sueldo;
 
   return (
     <div className="flex flex-col gap-5 pb-6 lg:gap-6">
@@ -25,7 +25,7 @@ async function Resumen() {
         Hola, {r.user.nombre.split(" ")[0]}
       </h1>
 
-      {/* En escritorio, las tres cifras clave van lado a lado. */}
+      {/* Lo que tienes hoy. Las proyecciones a futuro viven en /proyeccion. */}
       <div className="grid gap-5 lg:grid-cols-3 lg:gap-4">
         <header className="lg:flex lg:flex-col lg:justify-center lg:rounded-2xl lg:border lg:border-border lg:bg-surface lg:p-5">
           <p className="hidden text-xs text-muted lg:block">Dinero libre</p>
@@ -33,9 +33,7 @@ async function Resumen() {
             {formatSoles(r.ahorroActual)}
           </p>
           <p className="text-sm text-muted">
-            <Link href="/proyeccion" className="lg:hidden">
-              Dinero libre
-            </Link>
+            <span className="lg:hidden">Dinero libre</span>
             {separado > 0 && (
               <>
                 <span className="lg:hidden">{" · "}</span>
@@ -49,60 +47,54 @@ async function Resumen() {
 
         <Link href="/ingresos" className="active:scale-[0.99]">
           <Card className="flex h-full flex-col gap-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs text-muted">
-                  Ingresos por cobrar hasta {nombreMes(p.hasta.mes).toLowerCase()} {p.hasta.anio}
-                </p>
-                <p className="mt-0.5 text-2xl font-semibold tracking-tight">{formatSoles(porCobrarTotal)}</p>
-              </div>
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-medium">Tu sueldo</p>
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
                 <Banknote className="size-5" aria-hidden />
               </span>
             </div>
             {r.ingresos.length === 0 ? (
-              <p className="text-sm text-accent">Agrega tu sueldo para ver cuánto vas a recibir</p>
+              <p className="text-sm text-accent">Agrega tu sueldo para ver cuánto te deben y tu próximo pago</p>
             ) : (
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className={cx("rounded-xl px-3 py-2", p.porCobrarVencido > 0 ? "bg-warning-soft" : "bg-surface-muted")}>
-                  <p className={cx("text-xs", p.porCobrarVencido > 0 ? "text-warning" : "text-muted")}>Te deben del trabajo</p>
-                  <p className={cx("font-semibold", p.porCobrarVencido > 0 && "text-warning")}>{formatSoles(p.porCobrarVencido)}</p>
+                <div className={cx("rounded-xl px-3 py-2", teDeben > 0 ? "bg-warning-soft" : "bg-success-soft")}>
+                  <p className={cx("text-xs", teDeben > 0 ? "text-warning" : "text-success")}>Te deben</p>
+                  <p className={cx("text-lg font-semibold", teDeben > 0 ? "text-warning" : "text-success")}>
+                    {teDeben > 0 ? formatSoles(teDeben) : "Al día"}
+                  </p>
                 </div>
                 <div className="rounded-xl bg-surface-muted px-3 py-2">
                   <p className="text-xs text-muted">
-                    Próximos {p.meses.length} {p.meses.length === 1 ? "mes" : "meses"}
+                    {proximo ? `Próximo pago · ${nombreMes(proximo.mes).toLowerCase()}` : "Próximo pago"}
                   </p>
-                  <p className="font-semibold">{formatSoles(p.ingresosFuturos)}</p>
+                  <p className="text-lg font-semibold">{proximo ? formatSoles(proximo.monto) : "—"}</p>
                 </div>
               </div>
             )}
           </Card>
         </Link>
 
-        <Link href="/proyeccion" className="active:scale-[0.99]">
-          <Card className="flex h-full items-center gap-3">
-            <span className={cx("flex size-10 shrink-0 items-center justify-center rounded-xl", p.restante >= 0 ? "bg-success-soft text-success" : "bg-danger-soft text-danger")}>
-              <ChartLine className="size-5" aria-hidden />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted">
-                Proyección a {nombreMes(p.hasta.mes).toLowerCase()} {p.hasta.anio}: te {p.restante >= 0 ? "sobrarían" : "faltarían"}
-              </p>
-              <p className={cx("mt-0.5 text-xl font-semibold tracking-tight lg:text-2xl", p.restante >= 0 ? "text-success" : "text-danger")}>
-                {formatSoles(Math.abs(p.restante))}
-              </p>
+        <Link href="/deudas" className="active:scale-[0.99]">
+          <Card className="flex h-full flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-medium">Deudas</p>
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-surface-muted text-muted">
+                <HandCoins className="size-5" aria-hidden />
+              </span>
             </div>
-            <ChevronRight className="size-5 shrink-0 text-muted" aria-hidden />
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="rounded-xl bg-surface-muted px-3 py-2">
+                <p className="text-xs text-muted">Debes</p>
+                <p className={cx("text-lg font-semibold", r.debo > 0 && "text-danger")}>{formatSoles(r.debo)}</p>
+              </div>
+              <div className="rounded-xl bg-surface-muted px-3 py-2">
+                <p className="text-xs text-muted">Te deben</p>
+                <p className={cx("text-lg font-semibold", r.meDeben > 0 && "text-success")}>{formatSoles(r.meDeben)}</p>
+              </div>
+            </div>
           </Card>
         </Link>
       </div>
-
-      {(r.debo > 0 || r.meDeben > 0) && (
-        <div className="grid grid-cols-2 gap-3 lg:gap-4">
-          <Stat label="Debes" value={r.debo} tone={r.debo > 0 ? "danger" : "muted"} href="/deudas" />
-          <Stat label="Te deben" value={r.meDeben} tone="muted" href="/deudas" />
-        </div>
-      )}
 
       <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <section className="flex flex-col gap-3">
@@ -153,36 +145,6 @@ async function Resumen() {
         </section>
       </div>
     </div>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  tone,
-  href,
-  className,
-}: {
-  label: string;
-  value: number;
-  tone: "warning" | "danger" | "success" | "muted";
-  href: string;
-  className?: string;
-}) {
-  return (
-    <Link href={href} className={cx("rounded-2xl border border-border bg-surface p-3.5 active:scale-[0.98]", className)}>
-      <p className="text-xs text-muted">{label}</p>
-      <p
-        className={cx(
-          "mt-1 text-lg font-semibold",
-          tone === "warning" && "text-warning",
-          tone === "danger" && "text-danger",
-          tone === "success" && "text-success",
-        )}
-      >
-        {formatSoles(value)}
-      </p>
-    </Link>
   );
 }
 

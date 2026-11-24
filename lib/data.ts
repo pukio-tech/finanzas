@@ -138,17 +138,25 @@ export async function getMeta(id: string) {
 
 // ---- Deudas ----
 
+type ConMonto = { monto: { toNumber(): number } };
+
+// Saldo de una deuda: monto inicial + aumentos − abonos.
+function saldoDeuda(d: ConMonto & { abonos: ConMonto[]; aumentos: ConMonto[] }) {
+  const total = Math.round((num(d.monto) + sumar(d.aumentos)) * 100) / 100;
+  const abonado = sumar(d.abonos);
+  return { total, abonado, pendiente: Math.max(0, Math.round((total - abonado) * 100) / 100) };
+}
+
 export async function getDeudas() {
   const user = await getCurrentUser();
   await io();
   const deudas = await db.deuda.findMany({
     where: { usuarioId: user.id },
     orderBy: [{ fechaLimite: { sort: "asc", nulls: "last" } }, { fecha: "asc" }],
-    include: { abonos: { select: { monto: true } } },
+    include: { abonos: { select: { monto: true } }, aumentos: { select: { monto: true } } },
   });
   return deudas.map((d) => {
-    const monto = num(d.monto);
-    const abonado = sumar(d.abonos);
+    const { total, abonado, pendiente } = saldoDeuda(d);
     return {
       id: d.id,
       tipo: d.tipo,
@@ -156,9 +164,9 @@ export async function getDeudas() {
       descripcion: d.descripcion,
       fecha: d.fecha,
       fechaLimite: d.fechaLimite,
-      monto,
+      monto: total,
       abonado,
-      pendiente: Math.max(0, Math.round((monto - abonado) * 100) / 100),
+      pendiente,
     };
   });
 }
@@ -173,11 +181,11 @@ export async function getDeuda(id: string) {
         orderBy: [{ fecha: "desc" }, { id: "desc" }],
         include: { pago: { select: { id: true, descripcion: true } } },
       },
+      aumentos: { orderBy: [{ fecha: "desc" }, { creadoEn: "desc" }] },
     },
   });
   if (!deuda) notFound();
-  const monto = num(deuda.monto);
-  const abonado = sumar(deuda.abonos);
+  const { total, abonado, pendiente } = saldoDeuda(deuda);
   return {
     id: deuda.id,
     tipo: deuda.tipo,
@@ -185,9 +193,11 @@ export async function getDeuda(id: string) {
     descripcion: deuda.descripcion,
     fecha: deuda.fecha,
     fechaLimite: deuda.fechaLimite,
-    monto,
+    montoInicial: num(deuda.monto),
+    monto: total,
     abonado,
-    pendiente: Math.max(0, Math.round((monto - abonado) * 100) / 100),
+    pendiente,
+    aumentos: deuda.aumentos.map((a) => ({ id: a.id, fecha: a.fecha, monto: num(a.monto), nota: a.nota })),
     abonos: deuda.abonos.map((a) => ({
       id: a.id,
       fecha: a.fecha,
@@ -211,7 +221,10 @@ export async function getProyeccion(hasta?: MesAnio) {
       orderBy: [{ prioridad: "asc" }, { creadoEn: "asc" }],
       include: { aportes: { select: { monto: true } } },
     }),
-    db.deuda.findMany({ where: { usuarioId: user.id }, include: { abonos: { select: { monto: true } } } }),
+    db.deuda.findMany({
+      where: { usuarioId: user.id },
+      include: { abonos: { select: { monto: true } }, aumentos: { select: { monto: true } } },
+    }),
     db.ingreso.count({ where: { usuarioId: user.id } }),
   ]);
 
@@ -240,7 +253,7 @@ export async function getProyeccion(hasta?: MesAnio) {
   const pendiente = (tipo: "DEBO" | "ME_DEBEN") =>
     deudas
       .filter((d) => d.tipo === tipo)
-      .reduce((s, d) => s + Math.max(0, Math.round(num(d.monto) * 100) - Math.round(sumar(d.abonos) * 100)), 0) / 100;
+      .reduce((s, d) => s + Math.round(saldoDeuda(d).pendiente * 100), 0) / 100;
 
   const input = {
     ahorroActual: num(plan?.ahorroActual),
@@ -344,7 +357,7 @@ export async function getOpcionesPago() {
     db.deuda.findMany({
       where: { usuarioId: user.id, tipo: "DEBO" },
       orderBy: { fecha: "asc" },
-      select: { id: true, contraparte: true, monto: true, abonos: { select: { monto: true } } },
+      select: { id: true, contraparte: true, monto: true, abonos: { select: { monto: true } }, aumentos: { select: { monto: true } } },
     }),
   ]);
 
@@ -358,9 +371,27 @@ export async function getOpcionesPago() {
     deudas: deudas.map((d) => ({
       id: d.id,
       nombre: d.contraparte,
-      falta: Math.max(0, num(d.monto) - d.abonos.reduce((s, a) => s + num(a.monto), 0)),
+      falta: saldoDeuda(d).pendiente,
     })),
   };
+}
+
+// Lo que te deben de meses pasados y el próximo pago (el primer mes, desde el actual, que falta cobrar).
+function resumenSueldo(ingresos: IngresoDetalle[]) {
+  const teDeben = ingresos.reduce((t, i) => t + Math.round(i.porCobrarVencido * 100), 0) / 100;
+  const pendientes = ingresos.flatMap((i) => i.meses.filter((m) => !m.vencido && m.falta > 0));
+  const primero = pendientes.sort((a, b) => indiceMes(a) - indiceMes(b))[0];
+  const proximo = primero
+    ? {
+        anio: primero.anio,
+        mes: primero.mes,
+        monto:
+          pendientes
+            .filter((m) => m.anio === primero.anio && m.mes === primero.mes)
+            .reduce((t, m) => t + Math.round(m.falta * 100), 0) / 100,
+      }
+    : null;
+  return { teDeben, proximo };
 }
 
 export async function getResumen() {
@@ -377,9 +408,10 @@ export async function getResumen() {
     }),
     db.deuda.findMany({
       where: { usuarioId: user.id },
-      include: { abonos: { select: { monto: true } } },
+      include: { abonos: { select: { monto: true } }, aumentos: { select: { monto: true } } },
     }),
-    cargarIngresos(user.id),
+    // Se calcula un año hacia adelante solo para encontrar el próximo pago pendiente.
+    cargarIngresos(user.id, { vistaHasta: sumarMeses(mesActual(), 12) }),
     db.pago.findMany({
       where: { usuarioId: user.id },
       orderBy: [{ fecha: "desc" }, { creadoEn: "desc" }],
@@ -389,7 +421,7 @@ export async function getResumen() {
   ]);
 
   const pendiente = (d: (typeof deudas)[number]) =>
-    Math.max(0, num(d.monto) - d.abonos.reduce((s, a) => s + num(a.monto), 0));
+    saldoDeuda(d).pendiente;
 
   return {
     user,
@@ -410,6 +442,7 @@ export async function getResumen() {
       porCobrarVencido: i.porCobrarVencido,
       porCobrarMesActual: i.porCobrarMesActual,
     })),
+    sueldo: resumenSueldo(ingresos),
     ultimosPagos: ultimosPagos.map((p) => ({
       id: p.id,
       descripcion: p.descripcion,
