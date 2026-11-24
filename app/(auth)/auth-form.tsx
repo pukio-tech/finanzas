@@ -41,6 +41,12 @@ export function AuthForm({ mode }: { mode: "login" | "registro" }) {
           required
         />
 
+        {mode === "login" && (
+          <Link href="/recuperar" className="-mt-2 self-end text-sm text-accent">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        )}
+
         {state.error && <Alert>{state.error}</Alert>}
 
         <Button type="submit" variant="primary" disabled={pending} className="mt-1 w-full">
