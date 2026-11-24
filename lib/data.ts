@@ -5,6 +5,7 @@ import { getCurrentUser } from "./auth";
 import { db } from "./db";
 import { indiceMes, mesActual, sumarMeses, type MesAnio } from "./fechas";
 import { calcularIngreso } from "./ingresos";
+import { normalizarConfigInicio } from "./inicio";
 import { calcularProyeccion } from "./proyeccion";
 
 // Todas las funciones exportadas resuelven el usuario de la sesión;
@@ -408,7 +409,15 @@ function resumenSueldo(ingresos: IngresoDetalle[]) {
   return { teDeben, proximo, meses };
 }
 
-export async function getResumen() {
+// Qué tarjetas ver en el inicio y cómo; si nunca lo configuró, la configuración por defecto.
+export async function getConfigInicio() {
+  const user = await getCurrentUser();
+  await io();
+  const u = await db.usuario.findUnique({ where: { id: user.id }, select: { configInicio: true } });
+  return normalizarConfigInicio(u?.configInicio);
+}
+
+export async function getResumen(opciones: { pagos?: number } = {}) {
   const user = await getCurrentUser();
   // Prisma y el cálculo por fecha leen valores que cambian por petición.
   await io();
@@ -429,7 +438,7 @@ export async function getResumen() {
     db.pago.findMany({
       where: { usuarioId: user.id },
       orderBy: [{ fecha: "desc" }, { creadoEn: "desc" }],
-      take: 5,
+      take: opciones.pagos ?? 5,
       include: { categoria: { select: { nombre: true, icono: true } } },
     }),
   ]);

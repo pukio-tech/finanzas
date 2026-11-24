@@ -15,6 +15,8 @@ model Usuario {
   email        String   @unique
   passwordHash String
   creadoEn     DateTime @default(now())
+  // Qué tarjetas ver en el inicio, en qué orden y cómo (ver lib/inicio.ts).
+  configInicio Json?
 
   plan       PlanAhorro?
   ingresos   Ingreso[]
@@ -22,6 +24,22 @@ model Usuario {
   deudas     Deuda[]
   categorias Categoria[]
   pagos      Pago[]
+  tokens     TokenRecuperacion[]
+}
+
+// Enlace para restablecer la contraseña. Solo se guarda el SHA-256 del token;
+// vence a los 30 minutos y sirve una sola vez.
+model TokenRecuperacion {
+  id        String    @id @default(cuid())
+  usuarioId String
+  tokenHash String    @unique
+  expira    DateTime
+  usadoEn   DateTime?
+  creadoEn  DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
 }
 
 // Ahorro actual y gastos fijos del mes; junto con los ingresos alimentan la proyección.
