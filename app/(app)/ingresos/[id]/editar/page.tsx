@@ -26,11 +26,13 @@ async function Contenido({ params }: { params: Promise<{ id: string }> }) {
       <IngresoForm
         modo="editar"
         action={guardarIngreso.bind(null, ingreso.id)}
+        cobrado={ingreso.totalRecibido}
         inicial={{
           nombre: ingreso.nombre,
           monto: ingreso.montoMensual.toFixed(2),
           desde: isoDesdeFecha(ingreso.desde).slice(0, 7),
           hasta: ingreso.hasta ? isoDesdeFecha(ingreso.hasta).slice(0, 7) : "",
+          aparte: ingreso.aparte,
         }}
       />
     </div>

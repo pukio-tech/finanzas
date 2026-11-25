@@ -7,6 +7,11 @@ import { Button, Card, cx } from "@/components/ui";
 import { CANTIDADES_METAS, CANTIDADES_PAGOS, TARJETAS, type ConfigInicio, type Tarjeta } from "@/lib/inicio";
 import { guardarConfigInicio, restablecerConfigInicio } from "./actions";
 
+const anchas = Object.values(TARJETAS)
+  .filter((t) => t.ancho === 2)
+  .map((t) => t.nombre);
+const ANCHAS = `${anchas.slice(0, -1).join(", ")} y ${anchas.at(-1)}`;
+
 export function EditorInicio({ inicial }: { inicial: ConfigInicio }) {
   const [config, setConfig] = useState(inicial);
   const [pending, startTransition] = useTransition();
@@ -124,7 +129,7 @@ export function EditorInicio({ inicial }: { inicial: ConfigInicio }) {
       <p className="text-sm text-muted">
         {visibles === 0
           ? "No se mostrará ninguna tarjeta en el inicio"
-          : `Se mostrarán ${visibles} ${visibles === 1 ? "tarjeta" : "tarjetas"} en este orden. En escritorio, Tu sueldo, Metas y Últimos pagos ocupan el doble de ancho`}
+          : `Se mostrarán ${visibles} ${visibles === 1 ? "tarjeta" : "tarjetas"} en este orden. En escritorio, ${ANCHAS} ocupan el doble de ancho`}
       </p>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

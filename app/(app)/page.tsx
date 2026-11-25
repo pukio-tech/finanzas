@@ -1,13 +1,13 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { Banknote, ChartLine, ChevronRight, HandCoins, SlidersHorizontal } from "lucide-react";
+import { Banknote, ChartLine, ChevronRight, HandCoins, SlidersHorizontal, Store } from "lucide-react";
 import { CategoriaIcono } from "@/components/categoria-icono";
 import { Soles } from "@/components/soles";
 import { Card, ProgressBar, cx } from "@/components/ui";
 import { getConfigInicio, getProyeccion, getResumen } from "@/lib/data";
 import { mesActual } from "@/lib/fechas";
 import { formatFecha, formatSoles, nombreMes } from "@/lib/format";
-import { TARJETAS, type Tarjeta } from "@/lib/inicio";
+import { acomodarFilas, type Tarjeta } from "@/lib/inicio";
 
 export default function InicioPage() {
   return (
@@ -19,12 +19,14 @@ export default function InicioPage() {
 
 async function Resumen() {
   const config = await getConfigInicio();
-  const visibles = config.orden.filter((t) => !config.ocultas.includes(t));
+  const elegidas = config.orden.filter((t) => !config.ocultas.includes(t));
   const [r, p] = await Promise.all([
     getResumen({ pagos: config.pagosCantidad }),
     // La proyección solo se calcula si su tarjeta está visible.
-    visibles.includes("proyeccion") ? getProyeccion() : null,
+    elegidas.includes("proyeccion") ? getProyeccion() : null,
   ]);
+  // "Ingresos aparte" solo sale si tienes alguno.
+  const visibles = elegidas.filter((t) => t !== "aparte" || r.aparte.length > 0);
   const hoy = mesActual();
   const metas = config.metasCantidad > 0 ? r.metas.slice(0, config.metasCantidad) : r.metas;
   const separado = Math.round(r.metas.reduce((s, m) => s + m.aportado, 0) * 100) / 100;
@@ -71,6 +73,41 @@ async function Resumen() {
           )}
         </Card>
       </Link>
+    ),
+    aparte: () => (
+      <Card flush className="flex h-full flex-col">
+        <div className="px-4 pt-3 lg:px-5">
+          <Encabezado titulo="Ingresos aparte" icono={<Store className="size-4.5 text-muted" aria-hidden />} />
+        </div>
+        <div className="divide-y divide-border">
+          {r.aparte.map((i) => (
+            <Link
+              key={i.id}
+              href={`/ingresos/${i.id}`}
+              className="grid grid-cols-[1fr_auto_auto] items-center gap-x-5 px-4 py-3 active:bg-surface-muted lg:px-5"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-medium">{i.nombre}</p>
+                <p className="text-xs text-muted">
+                  <Soles value={i.montoMensual} /> al mes
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted">Cobrado</p>
+                <p className="font-medium">
+                  <Soles value={i.cobrado} />
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-muted">Te deben</p>
+                <p className={cx("font-medium", i.teDeben > 0 ? "text-warning" : "text-success")}>
+                  {i.teDeben > 0 ? <Soles value={i.teDeben} /> : "Al día"}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </Card>
     ),
     deudas: () => (
       <Link href="/deudas" className="block h-full active:scale-[0.99]">
@@ -193,11 +230,11 @@ async function Resumen() {
           </Link>
         </Card>
       ) : (
-        // En escritorio cada tarjeta ocupa 1 o 2 de 4 columnas; "dense" rellena los huecos.
-        <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-flow-row-dense lg:grid-cols-4">
-          {visibles.map((t) => (
-            <div key={t} className={cx("min-w-0", TARJETAS[t].ancho === 2 ? "lg:col-span-2" : "lg:col-span-1")}>
-              {tarjetas[t]()}
+        // En escritorio, filas de 4 columnas en el orden elegido; la última tarjeta de cada fila se estira.
+        <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-4">
+          {acomodarFilas(visibles).map(({ tarjeta, columnas }) => (
+            <div key={tarjeta} className={cx("min-w-0", SPAN[columnas])}>
+              {tarjetas[tarjeta]()}
             </div>
           ))}
         </div>
@@ -205,6 +242,13 @@ async function Resumen() {
     </div>
   );
 }
+
+const SPAN: Record<number, string> = {
+  1: "lg:col-span-1",
+  2: "lg:col-span-2",
+  3: "lg:col-span-3",
+  4: "lg:col-span-4",
+};
 
 function Encabezado({ titulo, icono, href }: { titulo: string; icono?: ReactNode; href?: string }) {
   return (

@@ -6,6 +6,11 @@ import { z } from "zod";
 export const TARJETAS = {
   dinero: { nombre: "Dinero libre", descripcion: "Lo que tienes sin separar para metas", ancho: 1 },
   sueldo: { nombre: "Tu sueldo", descripcion: "Lo que te deben y tu próximo pago", ancho: 2 },
+  aparte: {
+    nombre: "Ingresos aparte",
+    descripcion: "Los que llevas en otra cuenta, como un negocio. Solo sale si tienes alguno",
+    ancho: 2,
+  },
   deudas: { nombre: "Deudas", descripcion: "Lo que debes y lo que te deben", ancho: 1 },
   proyeccion: { nombre: "Proyección", descripcion: "Cuánto te sobraría o faltaría para tus metas", ancho: 1 },
   metas: { nombre: "Metas", descripcion: "El avance de lo que quieres comprar o pagar", ancho: 2 },
@@ -25,7 +30,7 @@ export type ConfigInicio = {
 };
 
 export const CONFIG_INICIO_DEFECTO: ConfigInicio = {
-  orden: ["dinero", "sueldo", "deudas", "metas", "pagos", "proyeccion"],
+  orden: ["dinero", "sueldo", "deudas", "aparte", "metas", "pagos", "proyeccion"],
   ocultas: ["proyeccion"],
   sueldoMeses: true,
   metasCantidad: 0,
@@ -44,14 +49,19 @@ const esquema = z.object({
 });
 
 // Acepta cualquier valor guardado (o nada) y devuelve una configuración completa y válida:
-// ignora tarjetas desconocidas y agrega al final las que falten (por ejemplo, tarjetas nuevas).
+// ignora tarjetas desconocidas y agrega las que falten (tarjetas nuevas) después de la que
+// las precede en el orden por defecto.
 export function normalizarConfigInicio(valor: unknown): ConfigInicio {
   const parsed = esquema.safeParse(valor);
   const v = parsed.success ? parsed.data : {};
   const valida = (id: string): id is Tarjeta => id in TARJETAS;
 
   const orden = [...new Set((v.orden ?? []).filter(valida))];
-  for (const id of CONFIG_INICIO_DEFECTO.orden) if (!orden.includes(id)) orden.push(id);
+  CONFIG_INICIO_DEFECTO.orden.forEach((id, i) => {
+    if (orden.includes(id)) return;
+    const anterior = CONFIG_INICIO_DEFECTO.orden[i - 1];
+    orden.splice(anterior ? orden.indexOf(anterior) + 1 : 0, 0, id);
+  });
 
   return {
     orden,
@@ -60,4 +70,26 @@ export function normalizarConfigInicio(valor: unknown): ConfigInicio {
     metasCantidad: CANTIDADES_METAS.includes(v.metasCantidad ?? -1) ? v.metasCantidad! : CONFIG_INICIO_DEFECTO.metasCantidad,
     pagosCantidad: CANTIDADES_PAGOS.includes(v.pagosCantidad ?? -1) ? v.pagosCantidad! : CONFIG_INICIO_DEFECTO.pagosCantidad,
   };
+}
+
+// Reparte las tarjetas en filas de 4 columnas respetando el orden: si la siguiente no entra en la
+// fila, la última de la fila se estira hasta el borde para no dejar huecos.
+export function acomodarFilas(tarjetas: Tarjeta[]) {
+  const filas: { tarjeta: Tarjeta; columnas: number }[][] = [[]];
+  let usadas = 0;
+  for (const tarjeta of tarjetas) {
+    const columnas = TARJETAS[tarjeta].ancho;
+    const fila = filas.at(-1)!;
+    if (usadas + columnas > 4) {
+      fila.at(-1)!.columnas += 4 - usadas;
+      filas.push([{ tarjeta, columnas }]);
+      usadas = columnas;
+    } else {
+      fila.push({ tarjeta, columnas });
+      usadas += columnas;
+    }
+  }
+  const ultima = filas.at(-1)!.at(-1);
+  if (ultima) ultima.columnas += 4 - usadas;
+  return filas.flat();
 }

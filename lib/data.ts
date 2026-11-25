@@ -43,6 +43,7 @@ async function cargarIngresos(usuarioId: string, opciones: { ingresoId?: string;
       montoMensual: num(i.montoMensual),
       desde: i.desde,
       hasta: i.hasta,
+      aparte: i.aparte,
       cobros: i.cobros.map((c) => ({ id: c.id, fecha: c.fecha, monto: num(c.monto), nota: c.nota })),
       ...estado,
     };
@@ -226,7 +227,7 @@ export async function getProyeccion(hasta?: MesAnio) {
       where: { usuarioId: user.id },
       include: { abonos: { select: { monto: true } }, aumentos: { select: { monto: true } } },
     }),
-    db.ingreso.count({ where: { usuarioId: user.id } }),
+    db.ingreso.count({ where: { usuarioId: user.id, aparte: false } }),
   ]);
 
   const desde = mesActual();
@@ -238,8 +239,9 @@ export async function getProyeccion(hasta?: MesAnio) {
   const porDefecto = masLejana && indiceMes(masLejana) > indiceMes(desde) ? masLejana : sumarMeses(desde, 4);
   const limite = hasta && indiceMes(hasta) >= indiceMes(desde) ? hasta : porDefecto;
 
-  // Ingreso por cobrar de cada mes del plazo, sumando todos los ingresos.
-  const ingresos = ingresosBase > 0 ? await cargarIngresos(user.id, { vistaHasta: limite }) : [];
+  // Ingreso por cobrar de cada mes del plazo, sumando los ingresos que no son de una cuenta aparte.
+  const ingresos =
+    ingresosBase > 0 ? (await cargarIngresos(user.id, { vistaHasta: limite })).filter((i) => !i.aparte) : [];
   const cantidad = indiceMes(limite) - indiceMes(desde) + 1;
   const ingresosPorMes = Array.from({ length: cantidad }, (_, i) => {
     const mes = sumarMeses(desde, i);
@@ -445,6 +447,8 @@ export async function getResumen(opciones: { pagos?: number } = {}) {
 
   const pendiente = (d: (typeof deudas)[number]) =>
     saldoDeuda(d).pendiente;
+  // Los ingresos de cuenta aparte no se mezclan con tu sueldo.
+  const sueldo = ingresos.filter((i) => !i.aparte);
 
   return {
     user,
@@ -458,14 +462,24 @@ export async function getResumen(opciones: { pagos?: number } = {}) {
     })),
     debo: deudas.filter((d) => d.tipo === "DEBO").reduce((s, d) => s + pendiente(d), 0),
     meDeben: deudas.filter((d) => d.tipo === "ME_DEBEN").reduce((s, d) => s + pendiente(d), 0),
-    ingresos: ingresos.map((i) => ({
+    ingresos: sueldo.map((i) => ({
       id: i.id,
       nombre: i.nombre,
       montoMensual: i.montoMensual,
       porCobrarVencido: i.porCobrarVencido,
       porCobrarMesActual: i.porCobrarMesActual,
     })),
-    sueldo: resumenSueldo(ingresos),
+    sueldo: resumenSueldo(sueldo),
+    aparte: ingresos
+      .filter((i) => i.aparte)
+      .map((i) => ({
+        id: i.id,
+        nombre: i.nombre,
+        montoMensual: i.montoMensual,
+        teDeben: i.porCobrarVencido,
+        faltaMes: i.porCobrarMesActual,
+        cobrado: i.totalRecibido,
+      })),
     ultimosPagos: ultimosPagos.map((p) => ({
       id: p.id,
       descripcion: p.descripcion,

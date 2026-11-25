@@ -37,7 +37,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
       <PageHeader
         title={ingreso.nombre}
         back={{ href: "/ingresos", label: "Ingresos" }}
-        subtitle={`${formatSoles(ingreso.montoMensual)} al mes desde ${nombreMes(desde.getUTCMonth() + 1).toLowerCase()} ${desde.getUTCFullYear()}`}
+        subtitle={`${formatSoles(ingreso.montoMensual)} al mes desde ${nombreMes(desde.getUTCMonth() + 1).toLowerCase()} ${desde.getUTCFullYear()}${ingreso.aparte ? " · cuenta aparte" : ""}`}
         action={
           <Link
             href={`/ingresos/${ingreso.id}/editar`}
@@ -66,7 +66,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
           <Card flush className="divide-y divide-border text-sm">
             <div className="flex items-baseline justify-between gap-3 px-4 py-3">
               <div>
-                <p className="font-medium">Total de tu sueldo</p>
+                <p className="font-medium">{ingreso.aparte ? "Total de este ingreso" : "Total de tu sueldo"}</p>
                 <p className="text-xs text-muted">
                   De {nombreMes(desde.getUTCMonth() + 1).toLowerCase()} {desde.getUTCFullYear()}
                   {ultimoMes && ` a ${nombreMes(ultimoMes.mes).toLowerCase()} ${ultimoMes.anio}`}, sin gastar nada

@@ -63,6 +63,8 @@ model Ingreso {
   montoMensual Decimal   @db.Decimal(12, 2)
   desde        DateTime  @db.Date
   hasta        DateTime? @db.Date
+  // Cuenta aparte (un negocio, por ejemplo): no suma a tu sueldo, dinero libre ni proyección.
+  aparte       Boolean   @default(false)
   creadoEn     DateTime  @default(now())
 
   usuario Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)

@@ -62,7 +62,9 @@ async function Lista() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{i.nombre}</p>
-                  <p className="text-sm text-muted">{formatSoles(i.montoMensual)} al mes</p>
+                  <p className="text-sm text-muted">
+                    {formatSoles(i.montoMensual)} al mes{i.aparte && " · cuenta aparte"}
+                  </p>
                 </div>
                 <ChevronRight className="mt-0.5 size-4.5 shrink-0 text-muted" aria-hidden />
               </div>

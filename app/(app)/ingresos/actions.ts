@@ -20,7 +20,7 @@ import {
 
 async function ingresoPropio(ingresoId: string) {
   const usuarioId = await requireUserId();
-  const ingreso = await db.ingreso.findFirst({ where: { id: ingresoId, usuarioId }, select: { id: true, montoMensual: true } });
+  const ingreso = await db.ingreso.findFirst({ where: { id: ingresoId, usuarioId }, select: { id: true, montoMensual: true, aparte: true } });
   if (!ingreso) throw new Error("Ingreso no encontrado");
   return { ...ingreso, usuarioId };
 }
@@ -47,7 +47,7 @@ const ingresoSchema = z
 
 export async function guardarIngreso(ingresoId: string | null, _prev: FormState, formData: FormData): Promise<FormState> {
   const usuarioId = await requireUserId();
-  if (ingresoId) await ingresoPropio(ingresoId);
+  const previo = ingresoId ? await ingresoPropio(ingresoId) : null;
 
   const parsed = ingresoSchema.safeParse({
     nombre: formData.get("nombre") ?? "",
@@ -58,10 +58,23 @@ export async function guardarIngreso(ingresoId: string | null, _prev: FormState,
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
   const { nombre, monto, desde, hasta } = parsed.data;
-  const data = { nombre, montoMensual: monto, desde: primerDia(desde), hasta: hasta ? primerDia(hasta) : null };
-  const ingreso = ingresoId
-    ? await db.ingreso.update({ where: { id: ingresoId }, data, select: { id: true } })
-    : await db.ingreso.create({ data: { ...data, usuarioId }, select: { id: true } });
+  const aparte = formData.get("aparte") === "on";
+  const data = { nombre, montoMensual: monto, desde: primerDia(desde), hasta: hasta ? primerDia(hasta) : null, aparte };
+
+  let ingreso: { id: string };
+  if (previo) {
+    const update = db.ingreso.update({ where: { id: previo.id }, data, select: { id: true } });
+    if (previo.aparte === aparte) {
+      ingreso = await update;
+    } else {
+      // Al pasar a cuenta aparte, lo ya cobrado sale de tu dinero libre; al volver, regresa.
+      const cobrado = await db.cobro.aggregate({ where: { ingresoId: previo.id }, _sum: { monto: true } });
+      const total = cobrado._sum.monto?.toNumber() ?? 0;
+      [ingreso] = await db.$transaction([update, moverAhorro(usuarioId, aparte ? -total : total)]);
+    }
+  } else {
+    ingreso = await db.ingreso.create({ data: { ...data, usuarioId }, select: { id: true } });
+  }
 
   refrescar(ingreso.id);
   redirect(`/ingresos/${ingreso.id}`);
@@ -78,7 +91,7 @@ export async function eliminarIngreso(ingresoId: string) {
 const cobroSchema = z.object({ monto: montoSchema, fecha: fechaSchema, nota: textoOpcional });
 
 export async function registrarCobro(ingresoId: string, _prev: FormState, formData: FormData): Promise<FormState> {
-  const { usuarioId } = await ingresoPropio(ingresoId);
+  const { usuarioId, aparte } = await ingresoPropio(ingresoId);
   const parsed = cobroSchema.safeParse({
     monto: formData.get("monto"),
     fecha: formData.get("fecha"),
@@ -86,22 +99,23 @@ export async function registrarCobro(ingresoId: string, _prev: FormState, formDa
   });
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
-  // Lo que cobras pasa a tu dinero libre.
-  await db.$transaction([
-    db.cobro.create({
-      data: { ingresoId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
-    }),
-    moverAhorro(usuarioId, parsed.data.monto),
-  ]);
+  // Lo que cobras pasa a tu dinero libre, salvo que el ingreso sea de una cuenta aparte.
+  const crear = db.cobro.create({
+    data: { ingresoId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
+  });
+  if (aparte) await crear;
+  else await db.$transaction([crear, moverAhorro(usuarioId, parsed.data.monto)]);
   refrescar(ingresoId);
   redirect(`/ingresos/${ingresoId}`);
 }
 
 export async function eliminarCobro(ingresoId: string, cobroId: string) {
-  const { usuarioId } = await ingresoPropio(ingresoId);
+  const { usuarioId, aparte } = await ingresoPropio(ingresoId);
   const cobro = await db.cobro.findFirst({ where: { id: cobroId, ingresoId } });
   if (!cobro) return;
-  await db.$transaction([db.cobro.delete({ where: { id: cobro.id } }), moverAhorro(usuarioId, -cobro.monto.toNumber())]);
+  const borrar = db.cobro.delete({ where: { id: cobro.id } });
+  if (aparte) await borrar;
+  else await db.$transaction([borrar, moverAhorro(usuarioId, -cobro.monto.toNumber())]);
   refrescar(ingresoId);
 }
 

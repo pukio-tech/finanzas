@@ -26,7 +26,7 @@ async function Formulario() {
     <IngresoForm
       modo="crear"
       action={guardarIngreso.bind(null, null)}
-      inicial={{ nombre: "Sueldo del trabajo", monto: "", desde: hoyISO().slice(0, 7), hasta: "" }}
+      inicial={{ nombre: "Sueldo del trabajo", monto: "", desde: hoyISO().slice(0, 7), hasta: "", aparte: false }}
     />
   );
 }
