@@ -3,10 +3,12 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { Pencil, Trash2 } from "lucide-react";
 import { ConfirmButton } from "@/components/confirm-button";
+import { BancoLogo } from "@/components/banco-logo";
 import { MovimientoForm } from "@/components/movimiento-form";
 import { PageHeader } from "@/components/page-header";
 import { Soles } from "@/components/soles";
 import { Card, cx } from "@/components/ui";
+import { BANCOS, esBanco } from "@/lib/bancos";
 import { getCuenta } from "@/lib/data";
 import { hoyISO } from "@/lib/fechas";
 import { formatFecha, formatSoles } from "@/lib/format";
@@ -39,7 +41,7 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
         action={
           <Link
             href={`/ahorros/${cuenta.id}/editar`}
-            aria-label="Cambiar nombre"
+            aria-label="Editar cuenta"
             className="flex size-11 shrink-0 items-center justify-center rounded-[10px] border border-border bg-surface text-muted"
           >
             <Pencil className="size-4.5" aria-hidden />
@@ -50,6 +52,12 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6">
         <div className="flex flex-col gap-5">
           <Card className="flex flex-col gap-3">
+            <Link href={`/ahorros/${cuenta.id}/editar`} className="flex w-fit items-center gap-2.5">
+              <BancoLogo banco={cuenta.banco} className="size-8" />
+              <span className={cx("text-sm", esBanco(cuenta.banco) ? "font-medium" : "text-accent")}>
+                {esBanco(cuenta.banco) ? BANCOS[cuenta.banco].nombre : "Indicar en qué banco está"}
+              </span>
+            </Link>
             <div>
               <p className="text-sm text-muted">Tienes</p>
               <p className="text-[32px] leading-tight font-medium tracking-tight">

@@ -106,6 +106,8 @@ model Cuenta {
   id        String   @id @default(cuid())
   usuarioId String
   nombre    String
+  // Dónde está la plata: id de lib/bancos.ts (bcp, bbva, nacion...).
+  banco     String?
   creadoEn  DateTime @default(now())
 
   usuario     Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)

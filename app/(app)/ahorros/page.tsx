@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ChevronRight, PiggyBank, Plus } from "lucide-react";
+import { BancoLogo } from "@/components/banco-logo";
 import { PageHeader } from "@/components/page-header";
 import { Soles } from "@/components/soles";
 import { Card } from "@/components/ui";
+import { BANCOS, esBanco } from "@/lib/bancos";
 import { getCuentas } from "@/lib/data";
 import { formatFecha, formatSoles } from "@/lib/format";
 
@@ -74,9 +76,13 @@ async function Lista() {
         {cuentas.map((c) => (
           <Link key={c.id} href={`/ahorros/${c.id}`} className="active:scale-[0.99]">
             <Card className="flex h-full flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <p className="min-w-0 truncate font-medium">{c.nombre}</p>
-                <ChevronRight className="mt-0.5 size-4.5 shrink-0 text-muted" aria-hidden />
+              <div className="flex items-center gap-3">
+                <BancoLogo banco={c.banco} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium">{c.nombre}</p>
+                  <p className="truncate text-xs text-muted">{esBanco(c.banco) ? BANCOS[c.banco].nombre : "Sin banco"}</p>
+                </div>
+                <ChevronRight className="size-4.5 shrink-0 text-muted" aria-hidden />
               </div>
               <p className="text-2xl font-medium tracking-tight">
                 <Soles value={c.saldo} />

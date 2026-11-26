@@ -174,6 +174,7 @@ async function cargarCuentas(usuarioId: string, cuentaId?: string) {
     return {
       id: c.id,
       nombre: c.nombre,
+      banco: c.banco,
       saldo: saldo / 100,
       entroEsteMes: entroEsteMes / 100,
       ultimo: c.movimientos[0]?.fecha ?? null,
@@ -522,7 +523,7 @@ export async function getResumen(opciones: { pagos?: number } = {}) {
       porCobrarMesActual: i.porCobrarMesActual,
     })),
     sueldo: resumenSueldo(ingresos),
-    cuentas: cuentas.map((c) => ({ id: c.id, nombre: c.nombre, saldo: c.saldo, entroEsteMes: c.entroEsteMes })),
+    cuentas: cuentas.map((c) => ({ id: c.id, nombre: c.nombre, banco: c.banco, saldo: c.saldo, entroEsteMes: c.entroEsteMes })),
     ultimosPagos: ultimosPagos.map((p) => ({
       id: p.id,
       descripcion: p.descripcion,

@@ -1,6 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
 import { Banknote, ChartLine, ChevronRight, HandCoins, SlidersHorizontal } from "lucide-react";
+import { BancoLogo } from "@/components/banco-logo";
 import { CategoriaIcono } from "@/components/categoria-icono";
 import { Soles } from "@/components/soles";
 import { Card, ProgressBar, cx } from "@/components/ui";
@@ -95,6 +96,7 @@ async function Resumen() {
               href={`/ahorros/${c.id}`}
               className="flex min-h-14 items-center gap-3 px-4 py-2.5 active:bg-surface-muted lg:px-5"
             >
+              <BancoLogo banco={c.banco} />
               <div className="min-w-0 flex-1">
                 <p className="truncate">{c.nombre}</p>
                 <p className="text-xs text-muted">

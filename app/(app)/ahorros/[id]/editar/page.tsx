@@ -22,7 +22,7 @@ async function Contenido({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="flex flex-col gap-5 pb-6">
       <PageHeader title="Editar cuenta" back={{ href: `/ahorros/${cuenta.id}`, label: cuenta.nombre }} />
-      <CuentaForm modo="editar" action={renombrarCuenta.bind(null, cuenta.id)} nombre={cuenta.nombre} />
+      <CuentaForm modo="editar" action={renombrarCuenta.bind(null, cuenta.id)} nombre={cuenta.nombre} banco={cuenta.banco} />
     </div>
   );
 }

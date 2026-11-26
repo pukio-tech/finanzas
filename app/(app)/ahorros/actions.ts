@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireUserId } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { esBanco } from "@/lib/bancos";
 import { fechaDesdeISO, hoyISO } from "@/lib/fechas";
 import { moverAhorro } from "@/lib/saldo";
 import {
@@ -36,6 +37,12 @@ function refrescar(cuentaId?: string) {
 
 const nombreSchema = z.string().trim().min(2, "Escribe un nombre, por ejemplo PEYA").max(80);
 
+// Banco elegido, o null si no se indicó.
+const leerBanco = (formData: FormData) => {
+  const banco = formData.get("banco");
+  return esBanco(banco) ? banco : null;
+};
+
 export async function crearCuenta(_prev: FormState, formData: FormData): Promise<FormState> {
   const usuarioId = await requireUserId();
   const parsed = z
@@ -48,6 +55,7 @@ export async function crearCuenta(_prev: FormState, formData: FormData): Promise
     data: {
       usuarioId,
       nombre,
+      banco: leerBanco(formData),
       // Lo que ya tenías juntado entra como primer movimiento.
       ...(saldo > 0
         ? {
@@ -67,7 +75,7 @@ export async function renombrarCuenta(cuentaId: string, _prev: FormState, formDa
   await cuentaPropia(cuentaId);
   const parsed = nombreSchema.safeParse(formData.get("nombre") ?? "");
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
-  await db.cuenta.update({ where: { id: cuentaId }, data: { nombre: parsed.data } });
+  await db.cuenta.update({ where: { id: cuentaId }, data: { nombre: parsed.data, banco: leerBanco(formData) } });
   refrescar(cuentaId);
   redirect(`/ahorros/${cuentaId}`);
 }
