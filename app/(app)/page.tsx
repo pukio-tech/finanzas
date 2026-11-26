@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from "react";
 import Link from "next/link";
-import { Banknote, ChartLine, ChevronRight, HandCoins, SlidersHorizontal, Store } from "lucide-react";
+import { Banknote, ChartLine, ChevronRight, HandCoins, SlidersHorizontal } from "lucide-react";
 import { CategoriaIcono } from "@/components/categoria-icono";
 import { Soles } from "@/components/soles";
 import { Card, ProgressBar, cx } from "@/components/ui";
@@ -25,8 +25,9 @@ async function Resumen() {
     // La proyección solo se calcula si su tarjeta está visible.
     elegidas.includes("proyeccion") ? getProyeccion() : null,
   ]);
-  // "Ingresos aparte" solo sale si tienes alguno.
-  const visibles = elegidas.filter((t) => t !== "aparte" || r.aparte.length > 0);
+  // "Ahorros" solo sale si tienes alguna cuenta.
+  const visibles = elegidas.filter((t) => t !== "ahorros" || r.cuentas.length > 0);
+  const totalAhorros = r.cuentas.reduce((t, c) => t + Math.round(c.saldo * 100), 0) / 100;
   const hoy = mesActual();
   const metas = config.metasCantidad > 0 ? r.metas.slice(0, config.metasCantidad) : r.metas;
   const separado = Math.round(r.metas.reduce((s, m) => s + m.aportado, 0) * 100) / 100;
@@ -74,36 +75,35 @@ async function Resumen() {
         </Card>
       </Link>
     ),
-    aparte: () => (
+    ahorros: () => (
       <Card flush className="flex h-full flex-col">
-        <div className="px-4 pt-3 lg:px-5">
-          <Encabezado titulo="Ingresos aparte" icono={<Store className="size-4.5 text-muted" aria-hidden />} />
+        <div className="flex items-end justify-between gap-3 px-4 pt-3 lg:px-5">
+          <div className="flex flex-col gap-1">
+            <Encabezado titulo="Ahorros" />
+            <p className="text-2xl font-medium tracking-tight">
+              <Soles value={totalAhorros} />
+            </p>
+          </div>
+          <Link href="/ahorros" className="flex min-h-11 items-center gap-0.5 text-sm text-accent">
+            Ver todo <ChevronRight className="size-4" aria-hidden />
+          </Link>
         </div>
-        <div className="divide-y divide-border">
-          {r.aparte.map((i) => (
+        <div className="mt-2 divide-y divide-border border-t border-border">
+          {r.cuentas.map((c) => (
             <Link
-              key={i.id}
-              href={`/ingresos/${i.id}`}
-              className="grid grid-cols-[1fr_auto_auto] items-center gap-x-5 px-4 py-3 active:bg-surface-muted lg:px-5"
+              key={c.id}
+              href={`/ahorros/${c.id}`}
+              className="flex min-h-14 items-center gap-3 px-4 py-2.5 active:bg-surface-muted lg:px-5"
             >
-              <div className="min-w-0">
-                <p className="truncate font-medium">{i.nombre}</p>
+              <div className="min-w-0 flex-1">
+                <p className="truncate">{c.nombre}</p>
                 <p className="text-xs text-muted">
-                  <Soles value={i.montoMensual} /> al mes
+                  {c.entroEsteMes > 0 ? `+ ${formatSoles(c.entroEsteMes)} este mes` : "Nada este mes"}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-muted">Cobrado</p>
-                <p className="font-medium">
-                  <Soles value={i.cobrado} />
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-muted">Te deben</p>
-                <p className={cx("font-medium", i.teDeben > 0 ? "text-warning" : "text-success")}>
-                  {i.teDeben > 0 ? <Soles value={i.teDeben} /> : "Al día"}
-                </p>
-              </div>
+              <span className="shrink-0 font-medium">
+                <Soles value={c.saldo} />
+              </span>
             </Link>
           ))}
         </div>

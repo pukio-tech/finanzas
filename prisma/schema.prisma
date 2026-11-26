@@ -20,6 +20,7 @@ model Usuario {
 
   plan       PlanAhorro?
   ingresos   Ingreso[]
+  cuentas    Cuenta[]
   metas      Meta[]
   deudas     Deuda[]
   categorias Categoria[]
@@ -63,8 +64,6 @@ model Ingreso {
   montoMensual Decimal   @db.Decimal(12, 2)
   desde        DateTime  @db.Date
   hasta        DateTime? @db.Date
-  // Cuenta aparte (un negocio, por ejemplo): no suma a tu sueldo, dinero libre ni proyección.
-  aparte       Boolean   @default(false)
   creadoEn     DateTime  @default(now())
 
   usuario Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
@@ -99,6 +98,41 @@ model Cobro {
   ingreso Ingreso @relation(fields: [ingresoId], references: [id], onDelete: Cascade)
 
   @@index([ingresoId])
+}
+
+// Ahorro o ingreso extra que se lleva aparte (PEYA, detracciones...): no tiene monto fijo
+// al mes; su saldo es la suma de lo que entra menos lo que sale.
+model Cuenta {
+  id        String   @id @default(cuid())
+  usuarioId String
+  nombre    String
+  creadoEn  DateTime @default(now())
+
+  usuario     Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  movimientos MovimientoCuenta[]
+
+  @@index([usuarioId])
+}
+
+enum TipoMovimientoCuenta {
+  ENTRADA
+  SALIDA
+}
+
+model MovimientoCuenta {
+  id       String               @id @default(cuid())
+  cuentaId String
+  tipo     TipoMovimientoCuenta
+  monto    Decimal              @db.Decimal(12, 2)
+  fecha    DateTime             @db.Date
+  nota     String?
+  // Salida que pasó a tu dinero libre (borrarla la revierte).
+  aLibre   Boolean              @default(false)
+  creadoEn DateTime             @default(now())
+
+  cuenta Cuenta @relation(fields: [cuentaId], references: [id], onDelete: Cascade)
+
+  @@index([cuentaId])
 }
 
 enum EstadoMeta {

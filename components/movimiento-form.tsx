@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useFormAction } from "./use-form-action";
 import { Alert, Button, Card, Field, MoneyInput } from "./ui";
 import type { FormState } from "@/lib/validacion";
@@ -12,6 +13,8 @@ export function MovimientoForm({
   hoy,
   montoSugerido,
   ayuda,
+  notaEjemplo = "De la gratificación",
+  children,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   titulo: string;
@@ -19,6 +22,9 @@ export function MovimientoForm({
   hoy: string;
   montoSugerido?: number;
   ayuda?: string;
+  notaEjemplo?: string;
+  // Campos extra antes del botón.
+  children?: ReactNode;
 }) {
   const { state, pending, formRef, onSubmit } = useFormAction(action);
 
@@ -36,7 +42,8 @@ export function MovimientoForm({
           </label>
           <Field label="Fecha" name="fecha" type="date" defaultValue={hoy} max={hoy} required className="min-w-0" />
         </div>
-        <Field label="Nota (opcional)" name="nota" maxLength={200} placeholder="De la gratificación" />
+        <Field label="Nota (opcional)" name="nota" maxLength={200} placeholder={notaEjemplo} />
+        {children}
         {state.error && <Alert>{state.error}</Alert>}
         {state.ok && !pending && <Alert tone="success">Guardado</Alert>}
         <Button type="submit" variant="primary" disabled={pending}>

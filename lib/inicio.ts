@@ -6,9 +6,9 @@ import { z } from "zod";
 export const TARJETAS = {
   dinero: { nombre: "Dinero libre", descripcion: "Lo que tienes sin separar para metas", ancho: 1 },
   sueldo: { nombre: "Tu sueldo", descripcion: "Lo que te deben y tu próximo pago", ancho: 2 },
-  aparte: {
-    nombre: "Ingresos aparte",
-    descripcion: "Los que llevas en otra cuenta, como un negocio. Solo sale si tienes alguno",
+  ahorros: {
+    nombre: "Ahorros",
+    descripcion: "Lo que juntas aparte, como PEYA o detracciones. Solo sale si tienes alguna cuenta",
     ancho: 2,
   },
   deudas: { nombre: "Deudas", descripcion: "Lo que debes y lo que te deben", ancho: 1 },
@@ -30,7 +30,7 @@ export type ConfigInicio = {
 };
 
 export const CONFIG_INICIO_DEFECTO: ConfigInicio = {
-  orden: ["dinero", "sueldo", "deudas", "aparte", "metas", "pagos", "proyeccion"],
+  orden: ["dinero", "sueldo", "deudas", "ahorros", "metas", "pagos", "proyeccion"],
   ocultas: ["proyeccion"],
   sueldoMeses: true,
   metasCantidad: 0,

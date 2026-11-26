@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { ChartLine, ChevronRight, HandCoins, LogOut, Receipt } from "lucide-react";
+import { ChartLine, ChevronRight, HandCoins, LogOut, PiggyBank, Receipt } from "lucide-react";
 import { Card } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth";
 import { cerrarSesion } from "../../(auth)/actions";
@@ -9,6 +9,7 @@ import { cerrarSesion } from "../../(auth)/actions";
 export const metadata: Metadata = { title: "Más" };
 
 const LINKS = [
+  { href: "/ahorros", label: "Ahorros", icon: PiggyBank },
   { href: "/pagos", label: "Pagos realizados", icon: Receipt },
   { href: "/deudas", label: "Deudas", icon: HandCoins },
   { href: "/proyeccion", label: "Proyección", icon: ChartLine },

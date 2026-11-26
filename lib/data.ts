@@ -43,7 +43,6 @@ async function cargarIngresos(usuarioId: string, opciones: { ingresoId?: string;
       montoMensual: num(i.montoMensual),
       desde: i.desde,
       hasta: i.hasta,
-      aparte: i.aparte,
       cobros: i.cobros.map((c) => ({ id: c.id, fecha: c.fecha, monto: num(c.monto), nota: c.nota })),
       ...estado,
     };
@@ -149,6 +148,61 @@ function saldoDeuda(d: ConMonto & { abonos: ConMonto[]; aumentos: ConMonto[] }) 
   return { total, abonado, pendiente: Math.max(0, Math.round((total - abonado) * 100) / 100) };
 }
 
+// ---- Ahorros: cuentas que se llevan aparte (PEYA, detracciones...) ----
+
+async function cargarCuentas(usuarioId: string, cuentaId?: string) {
+  const cuentas = await db.cuenta.findMany({
+    where: { usuarioId, ...(cuentaId ? { id: cuentaId } : {}) },
+    orderBy: { creadoEn: "asc" },
+    include: { movimientos: { orderBy: [{ fecha: "desc" }, { creadoEn: "desc" }] } },
+  });
+  const hoy = mesActual();
+
+  return cuentas.map((c) => {
+    let saldo = 0;
+    let entroEsteMes = 0;
+    for (const m of c.movimientos) {
+      const cents = Math.round(num(m.monto) * 100);
+      if (m.tipo === "ENTRADA") {
+        saldo += cents;
+        const mes = aMes(m.fecha);
+        if (mes.anio === hoy.anio && mes.mes === hoy.mes) entroEsteMes += cents;
+      } else {
+        saldo -= cents;
+      }
+    }
+    return {
+      id: c.id,
+      nombre: c.nombre,
+      saldo: saldo / 100,
+      entroEsteMes: entroEsteMes / 100,
+      ultimo: c.movimientos[0]?.fecha ?? null,
+      movimientos: c.movimientos.map((m) => ({
+        id: m.id,
+        tipo: m.tipo,
+        monto: num(m.monto),
+        fecha: m.fecha,
+        nota: m.nota,
+        aLibre: m.aLibre,
+      })),
+    };
+  });
+}
+
+export async function getCuentas() {
+  const user = await getCurrentUser();
+  await io();
+  return cargarCuentas(user.id);
+}
+
+export async function getCuenta(id: string) {
+  const user = await getCurrentUser();
+  await io();
+  const [cuenta] = await cargarCuentas(user.id, id);
+  if (!cuenta) notFound();
+  return cuenta;
+}
+
 export async function getDeudas() {
   const user = await getCurrentUser();
   await io();
@@ -227,7 +281,7 @@ export async function getProyeccion(hasta?: MesAnio) {
       where: { usuarioId: user.id },
       include: { abonos: { select: { monto: true } }, aumentos: { select: { monto: true } } },
     }),
-    db.ingreso.count({ where: { usuarioId: user.id, aparte: false } }),
+    db.ingreso.count({ where: { usuarioId: user.id } }),
   ]);
 
   const desde = mesActual();
@@ -239,9 +293,8 @@ export async function getProyeccion(hasta?: MesAnio) {
   const porDefecto = masLejana && indiceMes(masLejana) > indiceMes(desde) ? masLejana : sumarMeses(desde, 4);
   const limite = hasta && indiceMes(hasta) >= indiceMes(desde) ? hasta : porDefecto;
 
-  // Ingreso por cobrar de cada mes del plazo, sumando los ingresos que no son de una cuenta aparte.
-  const ingresos =
-    ingresosBase > 0 ? (await cargarIngresos(user.id, { vistaHasta: limite })).filter((i) => !i.aparte) : [];
+  // Ingreso por cobrar de cada mes del plazo, sumando todos los ingresos.
+  const ingresos = ingresosBase > 0 ? await cargarIngresos(user.id, { vistaHasta: limite }) : [];
   const cantidad = indiceMes(limite) - indiceMes(desde) + 1;
   const ingresosPorMes = Array.from({ length: cantidad }, (_, i) => {
     const mes = sumarMeses(desde, i);
@@ -424,7 +477,7 @@ export async function getResumen(opciones: { pagos?: number } = {}) {
   // Prisma y el cálculo por fecha leen valores que cambian por petición.
   await io();
 
-  const [plan, metas, deudas, ingresos, ultimosPagos] = await Promise.all([
+  const [plan, metas, deudas, ingresos, ultimosPagos, cuentas] = await Promise.all([
     db.planAhorro.findUnique({ where: { usuarioId: user.id } }),
     db.meta.findMany({
       where: { usuarioId: user.id, estado: "ACTIVA" },
@@ -443,12 +496,11 @@ export async function getResumen(opciones: { pagos?: number } = {}) {
       take: opciones.pagos ?? 5,
       include: { categoria: { select: { nombre: true, icono: true } } },
     }),
+    cargarCuentas(user.id),
   ]);
 
   const pendiente = (d: (typeof deudas)[number]) =>
     saldoDeuda(d).pendiente;
-  // Los ingresos de cuenta aparte no se mezclan con tu sueldo.
-  const sueldo = ingresos.filter((i) => !i.aparte);
 
   return {
     user,
@@ -462,24 +514,15 @@ export async function getResumen(opciones: { pagos?: number } = {}) {
     })),
     debo: deudas.filter((d) => d.tipo === "DEBO").reduce((s, d) => s + pendiente(d), 0),
     meDeben: deudas.filter((d) => d.tipo === "ME_DEBEN").reduce((s, d) => s + pendiente(d), 0),
-    ingresos: sueldo.map((i) => ({
+    ingresos: ingresos.map((i) => ({
       id: i.id,
       nombre: i.nombre,
       montoMensual: i.montoMensual,
       porCobrarVencido: i.porCobrarVencido,
       porCobrarMesActual: i.porCobrarMesActual,
     })),
-    sueldo: resumenSueldo(sueldo),
-    aparte: ingresos
-      .filter((i) => i.aparte)
-      .map((i) => ({
-        id: i.id,
-        nombre: i.nombre,
-        montoMensual: i.montoMensual,
-        teDeben: i.porCobrarVencido,
-        faltaMes: i.porCobrarMesActual,
-        cobrado: i.totalRecibido,
-      })),
+    sueldo: resumenSueldo(ingresos),
+    cuentas: cuentas.map((c) => ({ id: c.id, nombre: c.nombre, saldo: c.saldo, entroEsteMes: c.entroEsteMes })),
     ultimosPagos: ultimosPagos.map((p) => ({
       id: p.id,
       descripcion: p.descripcion,

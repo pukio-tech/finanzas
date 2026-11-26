@@ -8,6 +8,7 @@ import {
   HandCoins,
   House,
   Menu,
+  PiggyBank,
   Plus,
   Receipt,
   Target,
@@ -20,6 +21,7 @@ type NavItem = { href: string; label: string; icon: LucideIcon };
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio", icon: House },
   { href: "/ingresos", label: "Ingresos", icon: Banknote },
+  { href: "/ahorros", label: "Ahorros", icon: PiggyBank },
   { href: "/pagos", label: "Pagos", icon: Receipt },
   { href: "/metas", label: "Metas", icon: Target },
   { href: "/deudas", label: "Deudas", icon: HandCoins },
@@ -82,7 +84,7 @@ function BottomNavView({ pathname }: { pathname: string }) {
   const items = BOTTOM_ITEMS.map(({ href, label, icon: Icon }) => {
     const active =
       href === "/mas"
-        ? ["/mas", "/pagos", "/deudas", "/proyeccion"].some((p) => pathname.startsWith(p)) &&
+        ? ["/mas", "/ahorros", "/pagos", "/deudas", "/proyeccion"].some((p) => pathname.startsWith(p)) &&
           pathname !== "/pagos/nuevo"
         : isActive(pathname, href);
     return (
