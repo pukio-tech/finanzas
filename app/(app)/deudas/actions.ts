@@ -122,8 +122,8 @@ export async function eliminarAbono(deudaId: string, abonoId: string) {
   refrescar(deudaId);
 }
 
-// Sumar a la deuda: te prestaron más (DEBO, entra a tu dinero libre)
-// o prestaste más (ME_DEBEN, sale de tu dinero libre).
+// Sumar a la deuda. Si fue plata prestada, mueve tu dinero libre: te prestaron (DEBO, entra)
+// o prestaste (ME_DEBEN, sale). Si solo se debe más (un servicio, una compra fiada), no lo toca.
 export async function agregarAumento(deudaId: string, _prev: FormState, formData: FormData): Promise<FormState> {
   const { usuarioId, tipo } = await deudaPropia(deudaId);
   const parsed = abonoSchema.safeParse({
@@ -133,12 +133,18 @@ export async function agregarAumento(deudaId: string, _prev: FormState, formData
   });
   if (!parsed.success) return fallo(formData, primerError(parsed.error));
 
-  await db.$transaction([
-    db.aumentoDeuda.create({
-      data: { deudaId, monto: parsed.data.monto, fecha: fechaDesdeISO(parsed.data.fecha), nota: parsed.data.nota },
-    }),
-    moverAhorro(usuarioId, tipo === "DEBO" ? parsed.data.monto : -parsed.data.monto),
-  ]);
+  const movioLibre = formData.get("movioLibre") === "on";
+  const crear = db.aumentoDeuda.create({
+    data: {
+      deudaId,
+      monto: parsed.data.monto,
+      fecha: fechaDesdeISO(parsed.data.fecha),
+      nota: parsed.data.nota,
+      movioLibre,
+    },
+  });
+  if (movioLibre) await db.$transaction([crear, moverAhorro(usuarioId, tipo === "DEBO" ? parsed.data.monto : -parsed.data.monto)]);
+  else await crear;
   refrescar(deudaId);
   return { ok: true };
 }
@@ -148,9 +154,8 @@ export async function eliminarAumento(deudaId: string, aumentoId: string) {
   const aumento = await db.aumentoDeuda.findFirst({ where: { id: aumentoId, deudaId } });
   if (!aumento) return;
   const monto = aumento.monto.toNumber();
-  await db.$transaction([
-    db.aumentoDeuda.delete({ where: { id: aumento.id } }),
-    moverAhorro(usuarioId, tipo === "DEBO" ? -monto : monto),
-  ]);
+  const borrar = db.aumentoDeuda.delete({ where: { id: aumento.id } });
+  if (aumento.movioLibre) await db.$transaction([borrar, moverAhorro(usuarioId, tipo === "DEBO" ? -monto : monto)]);
+  else await borrar;
   refrescar(deudaId);
 }

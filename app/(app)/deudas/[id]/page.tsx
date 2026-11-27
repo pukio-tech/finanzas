@@ -118,11 +118,24 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
 
           <MovimientoForm
             action={agregarAumento.bind(null, deuda.id)}
-            titulo={debo ? "Me prestaron más" : "Le presté más"}
+            titulo={debo ? "Debo más" : "Me debe más"}
             boton="Sumar a la deuda"
-            ayuda={debo ? "Aumenta lo que debes y se suma a tu dinero libre." : "Aumenta lo que te debe y sale de tu dinero libre."}
+            ayuda={debo ? "Aumenta lo que debes." : "Aumenta lo que te debe."}
+            notaEjemplo={debo ? "Compra fiada" : "Planchado"}
             hoy={hoy}
-          />
+          >
+            <label className="flex min-h-11 cursor-pointer items-start gap-3 text-sm">
+              <input type="checkbox" name="movioLibre" className="mt-0.5 size-4.5 shrink-0 accent-[var(--accent)]" />
+              <span>
+                {debo ? "Me prestaron esa plata" : "Le presté esa plata"}
+                <span className="block text-xs text-muted">
+                  {debo
+                    ? "Márcalo si te dieron dinero: entra a tu dinero libre. Si solo debes más (algo fiado), déjalo sin marcar."
+                    : "Márcalo si le diste dinero: sale de tu dinero libre. Si solo te debe más (un servicio), déjalo sin marcar."}
+                </span>
+              </span>
+            </label>
+          </MovimientoForm>
         </div>
         <div className="flex flex-col gap-5">
           <section className="flex flex-col gap-3">
@@ -141,7 +154,8 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
                       <p className="truncate font-medium">{m.nota ?? (m.clase === "abono" ? "Abono" : "Se sumó a la deuda")}</p>
                     )}
                     <p className="text-xs text-muted">
-                      {formatFecha(m.fecha)} · {m.clase === "abono" ? "abono" : "aumento"}
+                      {formatFecha(m.fecha)} ·{" "}
+                      {m.clase === "abono" ? "abono" : m.movioLibre ? (debo ? "te prestaron" : "le prestaste") : "aumento"}
                     </p>
                   </div>
                   <span className={cx("shrink-0 font-medium", m.clase === "abono" ? "text-success" : "text-warning")}>
@@ -160,7 +174,9 @@ async function Detalle({ params }: { params: Promise<{ id: string }> }) {
                       message={
                         m.clase === "abono"
                           ? `${formatSoles(m.monto)} ${debo ? "vuelven a" : "salen de"} tu dinero libre.`
-                          : `La deuda baja ${formatSoles(m.monto)} y ese monto ${debo ? "sale de" : "vuelve a"} tu dinero libre.`
+                          : m.movioLibre
+                            ? `La deuda baja ${formatSoles(m.monto)} y ese monto ${debo ? "sale de" : "vuelve a"} tu dinero libre.`
+                            : `La deuda baja ${formatSoles(m.monto)}. Tu dinero libre no cambia.`
                       }
                       label={m.clase === "abono" ? "Eliminar abono" : "Quitar aumento"}
                       className="flex size-11 shrink-0 items-center justify-center rounded-[10px] text-muted hover:bg-surface-muted hover:text-danger"

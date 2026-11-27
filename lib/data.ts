@@ -254,7 +254,13 @@ export async function getDeuda(id: string) {
     monto: total,
     abonado,
     pendiente,
-    aumentos: deuda.aumentos.map((a) => ({ id: a.id, fecha: a.fecha, monto: num(a.monto), nota: a.nota })),
+    aumentos: deuda.aumentos.map((a) => ({
+      id: a.id,
+      fecha: a.fecha,
+      monto: num(a.monto),
+      nota: a.nota,
+      movioLibre: a.movioLibre,
+    })),
     abonos: deuda.abonos.map((a) => ({
       id: a.id,
       fecha: a.fecha,

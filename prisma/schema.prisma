@@ -207,6 +207,8 @@ model AumentoDeuda {
   fecha    DateTime @db.Date
   monto    Decimal  @db.Decimal(12, 2)
   nota     String?
+  // Si fue plata prestada (mueve el dinero libre) o solo una deuda nueva, como un servicio (no lo mueve).
+  movioLibre Boolean @default(true)
   creadoEn DateTime @default(now())
 
   deuda Deuda @relation(fields: [deudaId], references: [id], onDelete: Cascade)
